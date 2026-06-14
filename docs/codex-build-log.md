@@ -71,6 +71,10 @@ Co-authored-by: OpenAI Codex <codex@openai.com>
 
 This keeps the public Git history explicit for the OpenAI Codex Track judge.
 
+## Local Codex-Attributed Commits
+
+- `df9f20d35448693d6307dc8be275963e4b90fbc5` - prepared the hackathon submission package, README proof, app default, and submission assets.
+
 ## Limitations Kept Honest
 
 - Lease Lens is a review assistant, not legal advice.
