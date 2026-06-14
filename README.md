@@ -101,7 +101,7 @@ The Space now uses a custom **redline legal evidence desk** frontend around the 
 - **Backyard AI:** a practical contract-defense tool for the people who sign leases, NDAs, and gym contracts without reading them — try it on the **three real SEC-filed leases built into the app**.
 - **Tiny Titan / Well-Tuned:** `Llama-3.2-3B` + [our CUAD fine-tune](https://huggingface.co/giladam01/lease-lens-legal-3b) — **+242% relative F1 over base (0.119→0.406), exact-match 28×, paired-bootstrap 95% CI [+0.211,+0.368]**, on 100 held-out CUAD items with **pre-registered pass/fail gates**.
 - **Llama Champion:** the same fine-tune ships as a [Q8_0 GGUF](https://huggingface.co/giladam01/lease-lens-legal-3b-gguf) for the llama.cpp runtime — `ollama pull hf.co/giladam01/lease-lens-legal-3b-gguf` runs it fully offline.
-- **Best Use of Modal:** the [v2.5 variant](https://huggingface.co/giladam01/lease-lens-legal-3b-v25) (20% synthesized-abstention mix) was trained end-to-end on a **Modal A100** — see [`training/finetune_legal_3b_modal_v2.py`](training/finetune_legal_3b_modal_v2.py).
+- **Best Use of Modal:** the [v2.5 variant](https://huggingface.co/giladam01/lease-lens-legal-3b-v25) (20% synthesized-abstention mix) was trained end-to-end on a **Modal A100** — see [`training/finetune_legal_3b_modal_v2.py`](training/finetune_legal_3b_modal_v2.py) and the smoke-run evidence in [`docs/modal-evidence.md`](docs/modal-evidence.md).
 - **Off-Brand / Off the Grid:** custom-branded dark UI (beyond stock Gradio), and **zero cloud-API architecture** — weights run in-process; the GGUF runs on a laptop with no internet.
 - **Field Notes / Bonus Quest:** we published our failures too — see the field notes: the model that *never said NONE* (100% FP on absent clauses) and the negatives retrain that fixed it (→4% FP) at a recall cost, all measured.
 - **Submission package:** [Live Space](https://huggingface.co/spaces/build-small-hackathon/lease-lens) · [model](https://huggingface.co/giladam01/lease-lens-legal-3b) · [GGUF](https://huggingface.co/giladam01/lease-lens-legal-3b-gguf) · [v2 abstention variant](https://huggingface.co/giladam01/lease-lens-legal-3b-v2) · [v2.5 Modal-trained](https://huggingface.co/giladam01/lease-lens-legal-3b-v25)
@@ -140,9 +140,9 @@ Each is built into the app's dropdown and links to its original SEC filing — c
 
 | real lease (SEC source) | filer | result |
 |---|---|---|
-| [Office lease — Alpharetta, GA](https://www.sec.gov/Archives/edgar/data/1879403/000121390024033444/ea020177001ex10-131_larosa.htm) (EX-10.131) | La Rosa Holdings Corp. | **44/100 · 5 verbatim flags** |
+| [Office lease — Alpharetta, GA](https://www.sec.gov/Archives/edgar/data/1879403/000121390024033444/ea020177001ex10-131_larosa.htm) (EX-10.131) | La Rosa Holdings Corp. | **56/100 · 6 verbatim flags** in the latest live smoke scan |
 | [Office lease amendment — Boston, MA](https://www.sec.gov/Archives/edgar/data/2023658/000202365825000098/exhibit102-116huntingtonxb.htm) (EX-10.2, 2025) | Bicara Therapeutics Inc. | **31/100 · 3 flags** — incl. the exact **$125,301.33** security-deposit clause |
-| [Office lease — Addison, TX](https://www.sec.gov/Archives/edgar/data/1494259/000095017024020157/carg-ex10_31.htm) (EX-10.31) | CarGurus / CarOffer LLC | **31/100 · 4 flags** + honest coverage note |
+| [Office lease — Addison, TX](https://www.sec.gov/Archives/edgar/data/1494259/000095017024020157/carg-ex10_31.htm) (EX-10.31) | CarGurus / CarOffer LLC | long-form coverage stress test with the app's live score, grounded flags, and coverage note |
 
 *These are genuine executed commercial leases filed as public exhibits with the U.S. SEC (2024-2025) — outside the CUAD training set. Lease Lens has never seen them in training.*
 

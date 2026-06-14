@@ -30,6 +30,9 @@ Prepare Lease Lens for the Build Small Hackathon with maximum near-deadline leve
 - Polished the ZeroGPU-safe Gradio Blocks fallback with a branded legal
   workbench, judge workflow rail, risk docket cards, highlighted evidence pane,
   and an explicit analyzing/waiting state before the queued GPU call runs.
+- Fixed Gradio file-upload styling so the upload affordance matches the dark
+  workbench UI, and tightened keyword relevance matching to avoid substring
+  false hits such as `determination` matching `terminat*`.
 - Updated the Gradio app to default to a real SEC-filed lease and show the SEC
   provenance banner on first load.
 - Kept model loading, prompting, scoring, extraction guards, and generation

@@ -4,6 +4,7 @@
 import json
 import html as _html
 import os
+import re
 from pathlib import Path
 
 try:
@@ -223,12 +224,37 @@ def _analysis_payload(text, findings, skipped, n_checked, snippets, chunk_count=
     }
 
 
+def _keyword_regex(keyword):
+    kw = " ".join(str(keyword).lower().split())
+    if not kw:
+        return None
+    if " " in kw:
+        return re.compile(re.escape(kw), re.IGNORECASE)
+    return re.compile(r"\b" + re.escape(kw) + r"\w*", re.IGNORECASE)
+
+
+def _has_keyword(text, keyword):
+    pattern = _keyword_regex(keyword)
+    return bool(pattern and pattern.search(text or ""))
+
+
+def _has_any_keyword(text, keywords):
+    return any(_has_keyword(text, k) for k in keywords)
+
+
 def _quote_near_keyword(text, keywords):
     lower = text.lower()
-    hits = [lower.find(k) for k in keywords if lower.find(k) >= 0]
-    if not hits:
+    matches = []
+    for k in keywords:
+        pattern = _keyword_regex(k)
+        if not pattern:
+            continue
+        match = pattern.search(lower)
+        if match:
+            matches.append(match.start())
+    if not matches:
         return ""
-    idx = min(hits)
+    idx = min(matches)
     start = max(0, idx - 180)
     end = min(len(text), idx + 420)
     return text[start:end].strip()
@@ -273,7 +299,7 @@ def analyze_contract_payload(text):
     chunks = [c for c in chunks if len(c) > 200] or [body_text]
     pairs = []  # (clause, chunk_text)
     for c in CLAUSES:
-        hit = [ch for ch in chunks if any(k in " ".join(ch.lower().split()) for k in c["kw"])]
+        hit = [ch for ch in chunks if _has_any_keyword(" ".join(ch.lower().split()), c["kw"])]
         for ch in hit[:6]:
             pairs.append((c, ch))
     covered = {c["label"] for c, _ in pairs}
@@ -306,7 +332,7 @@ def analyze_contract_payload(text):
             continue
         if any(ncs[:80] == u[:80] or ncs in u or u in ncs for u in used):
             continue
-        if not any(k in ncs for k in c["kw"]):
+        if not _has_any_keyword(ncs, c["kw"]):
             continue
         used.append(ncs)
         snippets.append(cand)
@@ -457,7 +483,8 @@ html,body,body.dark{background:#08090b!important;color:var(--ll-paper)!important
 }
 .gradio-container textarea,
 .gradio-container input,
-.gradio-container select{
+.gradio-container select,
+.gradio-container button{
   background:#0c1016!important;
   border:1px solid rgba(196,154,74,.38)!important;
   color:#f6efe1!important;
@@ -524,6 +551,43 @@ html,body,body.dark{background:#08090b!important;color:var(--ll-paper)!important
   padding:2px 5px;color:#081014;background:#8be8e3;font-family:ui-monospace,Consolas,monospace;font-size:11px;font-weight:900;
 }
 #intake_grid{gap:12px!important;margin-bottom:8px}
+#contract_upload,
+#contract_upload > .wrap,
+#contract_upload .block,
+#contract_upload .file-preview,
+#contract_upload [data-testid="file"],
+#contract_upload [data-testid="file-upload"],
+#contract_upload [class*="file"],
+#contract_upload [class*="upload"],
+#contract_upload [class*="drop"]{
+  background:rgba(16,20,27,.58)!important;
+  border-color:rgba(103,215,212,.26)!important;
+  color:#f5ecd9!important;
+  border-radius:8px!important;
+}
+#contract_upload button,
+#contract_upload label,
+#contract_upload [role="button"]{
+  background:linear-gradient(180deg,rgba(21,27,36,.98),rgba(10,14,20,.98))!important;
+  border:1px solid rgba(196,154,74,.45)!important;
+  color:#f5ecd9!important;
+  box-shadow:none!important;
+}
+#contract_upload svg,
+#contract_upload path{
+  color:#f5ecd9!important;
+  stroke:#f5ecd9!important;
+}
+#contract_upload .label-wrap{
+  background:transparent!important;
+  border:0!important;
+}
+#contract_upload [class*="drop"]{
+  min-height:128px!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px dashed rgba(103,215,212,.35)!important;
+}
 #go_row{margin:12px 0 10px!important;gap:10px!important}
 #go_row button{
   border-radius:8px!important;
@@ -582,6 +646,20 @@ html,body,body.dark{background:#08090b!important;color:var(--ll-paper)!important
 .placeholder-panel{border:1px dashed rgba(196,154,74,.35);border-radius:8px;background:rgba(16,20,27,.56);padding:18px;color:#baad96;min-height:160px}
 .placeholder-panel b{display:block;color:#f3e8d1;margin-bottom:6px}
 .doc-loading{min-height:220px;display:grid;place-items:center;border:1px dashed rgba(103,215,212,.38);border-radius:8px;background:rgba(103,215,212,.05);color:#bdf4f1}
+.gradio-container .accordion,
+.gradio-container details,
+.gradio-container summary{
+  background:transparent!important;
+  border-color:rgba(196,154,74,.30)!important;
+  color:#f5ecd9!important;
+}
+.gradio-container details button,
+.gradio-container .accordion button{
+  background:linear-gradient(180deg,rgba(21,27,36,.98),rgba(10,14,20,.98))!important;
+  border:1px solid rgba(196,154,74,.45)!important;
+  color:#f5ecd9!important;
+  font-weight:850!important;
+}
 @media (max-width:760px){
   .gradio-container{padding:10px 10px 28px!important}
   #hdr{padding:16px}
@@ -730,7 +808,7 @@ def launch_blocks_fallback():
         )
         with gr.Row(elem_id="intake_grid"):
             ex = gr.Dropdown(choices=list(EXAMPLES.keys()), value=DEFAULT_EXAMPLE, label="Real filing or sample")
-            up = gr.File(label="Upload your own .txt contract", file_types=[".txt"], type="filepath")
+            up = gr.File(label="Upload your own .txt contract", file_types=[".txt"], type="filepath", elem_id="contract_upload")
         src_banner = gr.HTML(value=_source_banner_html(DEFAULT_EXAMPLE))
         inp = gr.Textbox(value=EXAMPLES[DEFAULT_EXAMPLE], lines=10, max_lines=20, label="Contract text", elem_id="contract_input")
         with gr.Row(elem_id="go_row"):
