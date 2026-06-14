@@ -62,3 +62,26 @@ Replace these placeholders before final submission:
 - `[SOCIAL_POST_URL]`
 
 After those links are live, add `achievement:sharing` to the README front matter if the Codex build log is public in the GitHub repo or on the Hub.
+
+## GitHub Publish Commands
+
+Run these from the repository root after authenticating GitHub CLI:
+
+```powershell
+gh auth login
+gh repo create lease-lens --public --source . --remote origin --push
+```
+
+Then replace `[PUBLIC_GITHUB_REPO_URL]` in `README.md` with the URL returned by `gh`, commit that README update, and push it:
+
+```powershell
+git add README.md
+git commit -m "docs: add public codex repo link" -m "Co-authored-by: OpenAI Codex <codex@openai.com>"
+git push origin main
+```
+
+If Git reports dubious ownership on this Windows workspace, run the same commands with:
+
+```powershell
+git -c safe.directory=D:/Repo/lease-lens/lease-lens-space-FINAL <command>
+```
