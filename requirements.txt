@@ -1,4 +1,4 @@
-# Lease Lens v2.2 — ZeroGPU, Gradio PINNED via README sdk_version (6.18.0).
+# Lease Lens v2.2 — ZeroGPU, Gradio PINNED via README sdk_version (5.50.0).
 # Do NOT list gradio here: a requirements entry can override the SDK pin and
 # reintroduce version drift (the root cause of the earlier runtime errors).
 torch

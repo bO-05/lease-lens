@@ -5,7 +5,7 @@ colorFrom: indigo
 colorTo: blue
 pinned: true
 sdk: gradio
-sdk_version: 6.18.0
+sdk_version: 5.50.0
 app_file: app.py
 license: apache-2.0
 short_description: A 3B legal model that reads the lease before you sign it.
