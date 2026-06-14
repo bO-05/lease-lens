@@ -19,8 +19,8 @@ Prepare Lease Lens for the Build Small Hackathon with maximum near-deadline leve
   `achievement:fieldnotes`.
 - Added an OpenAI Codex Track section to the README with Codex attribution
   evidence and a short judge path.
-- Added this build log as the public provenance artifact for reviewers once the
-  repo is published.
+- Added this build log as the public provenance artifact for reviewers in the
+  public GitHub repo: https://github.com/bO-05/lease-lens.
 - Replaced the visible stock Gradio Blocks interface with a custom redline legal
   evidence desk served through `gradio.Server`, with a styled Blocks fallback.
 - Added public frontend source files: `index.html`, `static/app.css`,

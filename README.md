@@ -74,6 +74,7 @@ datasets:
 [![Model](https://img.shields.io/badge/🤗_Model-lease--lens--legal--3b-FF9D00?style=flat-square)](https://huggingface.co/giladam01/lease-lens-legal-3b)
 [![GGUF](https://img.shields.io/badge/llama.cpp-GGUF-06B6D4?style=flat-square)](https://huggingface.co/giladam01/lease-lens-legal-3b-gguf)
 [![Field Notes](https://img.shields.io/badge/Read-Field_Notes-FFD21E?style=flat-square&logo=huggingface&logoColor=black)](https://huggingface.co/blog/giladam01/lease-lens-article)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-bO--05%2Flease--lens-111827?style=flat-square&logo=github&logoColor=white)](https://github.com/bO-05/lease-lens)
 [![Codex Log](https://img.shields.io/badge/Codex-build_log-111827?style=flat-square&logo=openai&logoColor=white)](docs/codex-build-log.md)
 
 </div>
@@ -87,6 +88,7 @@ The Space now uses a custom **redline legal evidence desk** frontend around the 
 | | |
 |---|---|
 | **Live Space** | [build-small-hackathon/lease-lens](https://huggingface.co/spaces/build-small-hackathon/lease-lens) |
+| **Public GitHub repo** | [bO-05/lease-lens](https://github.com/bO-05/lease-lens) |
 | **Field Notes article** | [What fine-tuning a 3B legal model taught me](https://huggingface.co/blog/giladam01/lease-lens-article) |
 | **Track** | Backyard AI — a contract-defense tool for people who sign things they don't read |
 | **Model (shipped)** | [`giladam01/lease-lens-legal-3b`](https://huggingface.co/giladam01/lease-lens-legal-3b) — Llama-3.2-3B fine-tune (≤4B) |
@@ -104,10 +106,13 @@ The Space now uses a custom **redline legal evidence desk** frontend around the 
 - **Field Notes / Bonus Quest:** we published our failures too — see the field notes: the model that *never said NONE* (100% FP on absent clauses) and the negatives retrain that fixed it (→4% FP) at a recall cost, all measured.
 - **Submission package:** [Live Space](https://huggingface.co/spaces/build-small-hackathon/lease-lens) · [model](https://huggingface.co/giladam01/lease-lens-legal-3b) · [GGUF](https://huggingface.co/giladam01/lease-lens-legal-3b-gguf) · [v2 abstention variant](https://huggingface.co/giladam01/lease-lens-legal-3b-v2) · [v2.5 Modal-trained](https://huggingface.co/giladam01/lease-lens-legal-3b-v25)
 
+- **GitHub repo:** [bO-05/lease-lens](https://github.com/bO-05/lease-lens) with Codex-attributed commits for the OpenAI Codex Track.
+
 ## OpenAI Codex Track
 
 Lease Lens is being finalized with Codex as the coding agent for the OpenAI Codex Track.
 
+- **Public GitHub repo:** [`bO-05/lease-lens`](https://github.com/bO-05/lease-lens).
 - **Codex-attributed commits:** local commits use a `Co-authored-by: OpenAI Codex <codex@openai.com>` trailer so the public history makes the Codex contribution explicit.
 - **Build provenance:** [`docs/codex-build-log.md`](docs/codex-build-log.md) records what Codex changed, which checks were run, and what model/runtime behavior was intentionally left unchanged.
 - **Judge path:** open the Space, keep the default real SEC lease selected, press **Analyze contract**, then draft the negotiation email from the flags.
