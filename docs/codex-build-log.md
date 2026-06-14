@@ -1,0 +1,82 @@
+# Codex Build Log
+
+This log documents the Codex-assisted final submission pass for Lease Lens.
+
+## Goal
+
+Prepare Lease Lens for the Build Small Hackathon with maximum near-deadline leverage:
+
+- make the Space easier for judges to evaluate quickly;
+- make the OpenAI Codex Track evidence explicit;
+- strengthen machine-readable category tags;
+- preserve the existing small-model, offline, and measured-evaluation claims.
+
+## Codex-Assisted Changes
+
+- Added canonical hackathon tags to the Space README:
+  `track:backyard`, `sponsor:openai`, `sponsor:modal`, `achievement:offgrid`,
+  `achievement:welltuned`, `achievement:offbrand`, `achievement:llama`, and
+  `achievement:fieldnotes`.
+- Added an OpenAI Codex Track section to the README with the required public
+  GitHub repo slot, Codex attribution policy, and judge path.
+- Added this build log as the public provenance artifact for reviewers once the
+  repo is published.
+- Added `docs/submission-assets.md` with a 60-90 second demo script and social
+  post copy.
+- Updated the Gradio app to default to a real SEC-filed lease and show the SEC
+  provenance banner on first load.
+- Kept model loading, prompting, scoring, extraction guards, and generation
+  behavior unchanged.
+
+## Verification Commands
+
+Run these before publishing:
+
+```bash
+python -m py_compile app.py sample_contracts.py
+python -c "import ast, pathlib; ast.parse(pathlib.Path('app.py').read_text(encoding='utf-8')); ast.parse(pathlib.Path('sample_contracts.py').read_text(encoding='utf-8')); print('AST checks passed')"
+```
+
+After pushing to Hugging Face, verify the Space metadata:
+
+```bash
+python -c "import json, urllib.request; d=json.load(urllib.request.urlopen('https://huggingface.co/api/spaces/build-small-hackathon/lease-lens')); print(d['runtime']['stage'], d['runtime']['hardware']['current'], d['private'], d['sha'])"
+```
+
+Expected:
+
+- runtime stage is `RUNNING`;
+- hardware is `zero-a10g`;
+- private is `False`;
+- SHA matches the latest pushed Space commit.
+
+## External Submission Items
+
+These require account-level publishing outside the codebase:
+
+- create or log into the public GitHub repo;
+- push Codex-attributed commits;
+- replace `[PUBLIC_GITHUB_REPO_URL]` in `README.md`;
+- record and upload the demo video;
+- publish the social post;
+- replace `[DEMO_VIDEO_URL]` and `[SOCIAL_POST_URL]` in `README.md`.
+
+## Codex Attribution Policy
+
+Use commit messages with this trailer:
+
+```text
+Co-authored-by: OpenAI Codex <codex@openai.com>
+```
+
+This keeps the public Git history explicit for the OpenAI Codex Track judge.
+
+## Limitations Kept Honest
+
+- Lease Lens is a review assistant, not legal advice.
+- The shipped app relies on deterministic grounding, deduplication, and keyword
+  relevance guards around a 3B fine-tune.
+- The app reads the first 80k characters of long documents and declares coverage
+  in the UI.
+- The v2/v2.5 abstention experiments are linked as measured variants rather than
+  silently replacing the shipped model.
