@@ -58,6 +58,7 @@ Expected:
 
 - `df9f20d35448693d6307dc8be275963e4b90fbc5` - prepared the hackathon submission package, README proof, and app default.
 - `3a974831a08b2fd34448ee8fc7b58b9e8448c470` - recorded the first Codex provenance commit in this build log.
+- `aa802c421f00a665c392a7beb1114e11c6c3592c` - added the custom legal evidence desk UI, `gradio.Server` APIs, mock preview mode, and REST fallback routes.
 
 ## Limitations Kept Honest
 
