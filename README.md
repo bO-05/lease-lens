@@ -73,6 +73,9 @@ datasets:
 [![Live Space](https://img.shields.io/badge/🤗_Live-Space-FFD21E?style=flat-square)](https://huggingface.co/spaces/build-small-hackathon/lease-lens)
 [![Model](https://img.shields.io/badge/🤗_Model-lease--lens--legal--3b-FF9D00?style=flat-square)](https://huggingface.co/giladam01/lease-lens-legal-3b)
 [![GGUF](https://img.shields.io/badge/llama.cpp-GGUF-06B6D4?style=flat-square)](https://huggingface.co/giladam01/lease-lens-legal-3b-gguf)
+[![Demo Video](https://img.shields.io/badge/Demo-YouTube-FF0000?style=flat-square&logo=youtube&logoColor=white)](https://youtu.be/M-v3OAKO5-k)
+[![Reddit Post](https://img.shields.io/badge/Social-Reddit-FF4500?style=flat-square&logo=reddit&logoColor=white)](https://www.reddit.com/r/huggingface/comments/1u5u1ct/i_built_a_3b_lease_risk_scanner_for_the_hf_build/)
+[![dev.to Article](https://img.shields.io/badge/Article-dev.to-0A0A0A?style=flat-square&logo=devdotto&logoColor=white)](https://dev.to/asynchronope/i-built-a-3b-lease-risk-scanner-that-runs-without-an-external-llm-api-170a)
 [![Field Notes](https://img.shields.io/badge/Read-Field_Notes-FFD21E?style=flat-square&logo=huggingface&logoColor=black)](https://huggingface.co/blog/giladam01/lease-lens-article)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-bO--05%2Flease--lens-111827?style=flat-square&logo=github&logoColor=white)](https://github.com/bO-05/lease-lens)
 [![Codex Log](https://img.shields.io/badge/Codex-build_log-111827?style=flat-square&logo=openai&logoColor=white)](docs/codex-build-log.md)
@@ -89,6 +92,9 @@ The Space now uses a custom **redline legal evidence desk** frontend around the 
 |---|---|
 | **Live Space** | [build-small-hackathon/lease-lens](https://huggingface.co/spaces/build-small-hackathon/lease-lens) |
 | **Public GitHub repo** | [bO-05/lease-lens](https://github.com/bO-05/lease-lens) |
+| **Demo video** | [YouTube demo](https://youtu.be/M-v3OAKO5-k) |
+| **Social post** | [r/huggingface Reddit post](https://www.reddit.com/r/huggingface/comments/1u5u1ct/i_built_a_3b_lease_risk_scanner_for_the_hf_build/) |
+| **Technical article** | [dev.to write-up](https://dev.to/asynchronope/i-built-a-3b-lease-risk-scanner-that-runs-without-an-external-llm-api-170a) |
 | **Field Notes article** | [What fine-tuning a 3B legal model taught me](https://huggingface.co/blog/giladam01/lease-lens-article) |
 | **Track** | Backyard AI — a contract-defense tool for people who sign things they don't read |
 | **Model (shipped)** | [`giladam01/lease-lens-legal-3b`](https://huggingface.co/giladam01/lease-lens-legal-3b) — Llama-3.2-3B fine-tune (≤4B) |
@@ -107,6 +113,7 @@ The Space now uses a custom **redline legal evidence desk** frontend around the 
 - **Submission package:** [Live Space](https://huggingface.co/spaces/build-small-hackathon/lease-lens) · [model](https://huggingface.co/giladam01/lease-lens-legal-3b) · [GGUF](https://huggingface.co/giladam01/lease-lens-legal-3b-gguf) · [v2 abstention variant](https://huggingface.co/giladam01/lease-lens-legal-3b-v2) · [v2.5 Modal-trained](https://huggingface.co/giladam01/lease-lens-legal-3b-v25)
 
 - **GitHub repo:** [bO-05/lease-lens](https://github.com/bO-05/lease-lens) with Codex-attributed commits for the OpenAI Codex Track.
+- **Launch links:** [demo video](https://youtu.be/M-v3OAKO5-k), [Reddit social post](https://www.reddit.com/r/huggingface/comments/1u5u1ct/i_built_a_3b_lease_risk_scanner_for_the_hf_build/), and [dev.to technical article](https://dev.to/asynchronope/i-built-a-3b-lease-risk-scanner-that-runs-without-an-external-llm-api-170a).
 
 ## OpenAI Codex Track
 
