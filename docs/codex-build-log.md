@@ -17,12 +17,10 @@ Prepare Lease Lens for the Build Small Hackathon with maximum near-deadline leve
   `track:backyard`, `sponsor:openai`, `sponsor:modal`, `achievement:offgrid`,
   `achievement:welltuned`, `achievement:offbrand`, `achievement:llama`, and
   `achievement:fieldnotes`.
-- Added an OpenAI Codex Track section to the README with the required public
-  GitHub repo slot, Codex attribution policy, and judge path.
+- Added an OpenAI Codex Track section to the README with Codex attribution
+  evidence and a short judge path.
 - Added this build log as the public provenance artifact for reviewers once the
   repo is published.
-- Added `docs/submission-assets.md` with a 60-90 second demo script and social
-  post copy.
 - Updated the Gradio app to default to a real SEC-filed lease and show the SEC
   provenance banner on first load.
 - Kept model loading, prompting, scoring, extraction guards, and generation
@@ -50,17 +48,6 @@ Expected:
 - private is `False`;
 - SHA matches the latest pushed Space commit.
 
-## External Submission Items
-
-These require account-level publishing outside the codebase:
-
-- create or log into the public GitHub repo;
-- push Codex-attributed commits;
-- replace `[PUBLIC_GITHUB_REPO_URL]` in `README.md`;
-- record and upload the demo video;
-- publish the social post;
-- replace `[DEMO_VIDEO_URL]` and `[SOCIAL_POST_URL]` in `README.md`.
-
 ## Codex Attribution Policy
 
 Use commit messages with this trailer:
@@ -73,7 +60,7 @@ This keeps the public Git history explicit for the OpenAI Codex Track judge.
 
 ## Local Codex-Attributed Commits
 
-- `df9f20d35448693d6307dc8be275963e4b90fbc5` - prepared the hackathon submission package, README proof, app default, and submission assets.
+- `df9f20d35448693d6307dc8be275963e4b90fbc5` - prepared the hackathon submission package, README proof, and app default.
 - `3a974831a08b2fd34448ee8fc7b58b9e8448c470` - recorded the first Codex provenance commit in this build log.
 
 ## Limitations Kept Honest

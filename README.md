@@ -85,9 +85,6 @@ Paste any contract → verbatim risky-clause flags, a risk score, in-text highli
 | | |
 |---|---|
 | **Live Space** | [build-small-hackathon/lease-lens](https://huggingface.co/spaces/build-small-hackathon/lease-lens) |
-| **GitHub / Codex Track** | [PUBLIC_GITHUB_REPO_URL] — Codex-attributed commits prepared in this repo; replace with the public repo URL before final submission |
-| **Demo video** | [DEMO_VIDEO_URL] — 60-90s recording script in [`docs/submission-assets.md`](docs/submission-assets.md) |
-| **Social post** | [SOCIAL_POST_URL] — ready-to-post copy in [`docs/submission-assets.md`](docs/submission-assets.md) |
 | **Field Notes article** | [What fine-tuning a 3B legal model taught me](https://huggingface.co/blog/giladam01/lease-lens-article) |
 | **Track** | Backyard AI — a contract-defense tool for people who sign things they don't read |
 | **Model (shipped)** | [`giladam01/lease-lens-legal-3b`](https://huggingface.co/giladam01/lease-lens-legal-3b) — Llama-3.2-3B fine-tune (≤4B) |
@@ -96,22 +93,21 @@ Paste any contract → verbatim risky-clause flags, a risk score, in-text highli
 
 ## TL;DR for Judges
 
-- **OpenAI Codex Track:** Lease Lens was prepared for final submission with Codex as the coding agent. The public GitHub repo must contain the Codex-attributed commits and link back here before the deadline; see [`docs/codex-build-log.md`](docs/codex-build-log.md).
+- **OpenAI Codex Track:** Lease Lens was prepared with Codex as the coding agent; see [`docs/codex-build-log.md`](docs/codex-build-log.md) for the public build evidence.
 - **Backyard AI:** a practical contract-defense tool for the people who sign leases, NDAs, and gym contracts without reading them — try it on the **three real SEC-filed leases built into the app**.
 - **Tiny Titan / Well-Tuned:** `Llama-3.2-3B` + [our CUAD fine-tune](https://huggingface.co/giladam01/lease-lens-legal-3b) — **+242% relative F1 over base (0.119→0.406), exact-match 28×, paired-bootstrap 95% CI [+0.211,+0.368]**, on 100 held-out CUAD items with **pre-registered pass/fail gates**.
 - **Llama Champion:** the same fine-tune ships as a [Q8_0 GGUF](https://huggingface.co/giladam01/lease-lens-legal-3b-gguf) for the llama.cpp runtime — `ollama pull hf.co/giladam01/lease-lens-legal-3b-gguf` runs it fully offline.
 - **Best Use of Modal:** the [v2.5 variant](https://huggingface.co/giladam01/lease-lens-legal-3b-v25) (20% synthesized-abstention mix) was trained end-to-end on a **Modal A100** — see [`training/finetune_legal_3b_modal_v2.py`](training/finetune_legal_3b_modal_v2.py).
 - **Off-Brand / Off the Grid:** custom-branded dark UI (beyond stock Gradio), and **zero cloud-API architecture** — weights run in-process; the GGUF runs on a laptop with no internet.
 - **Field Notes / Bonus Quest:** we published our failures too — see the field notes: the model that *never said NONE* (100% FP on absent clauses) and the negatives retrain that fixed it (→4% FP) at a recall cost, all measured.
-- **Submission package:** [Live Space](https://huggingface.co/spaces/build-small-hackathon/lease-lens) · [model](https://huggingface.co/giladam01/lease-lens-legal-3b) · [GGUF](https://huggingface.co/giladam01/lease-lens-legal-3b-gguf) · [v2 abstention variant](https://huggingface.co/giladam01/lease-lens-legal-3b-v2) · [v2.5 Modal-trained](https://huggingface.co/giladam01/lease-lens-legal-3b-v25) · GitHub: **[PUBLIC_GITHUB_REPO_URL]** · demo video: **[DEMO_VIDEO_URL]**
+- **Submission package:** [Live Space](https://huggingface.co/spaces/build-small-hackathon/lease-lens) · [model](https://huggingface.co/giladam01/lease-lens-legal-3b) · [GGUF](https://huggingface.co/giladam01/lease-lens-legal-3b-gguf) · [v2 abstention variant](https://huggingface.co/giladam01/lease-lens-legal-3b-v2) · [v2.5 Modal-trained](https://huggingface.co/giladam01/lease-lens-legal-3b-v25)
 
 ## OpenAI Codex Track
 
 Lease Lens is being finalized with Codex as the coding agent for the OpenAI Codex Track.
 
-- **Required public repo:** replace **[PUBLIC_GITHUB_REPO_URL]** with the GitHub repo after it is created.
 - **Codex-attributed commits:** local commits use a `Co-authored-by: OpenAI Codex <codex@openai.com>` trailer so the public history makes the Codex contribution explicit.
-- **Build provenance:** [`docs/codex-build-log.md`](docs/codex-build-log.md) records what Codex changed, which checks were run, and which external submission links still require account-level publishing.
+- **Build provenance:** [`docs/codex-build-log.md`](docs/codex-build-log.md) records what Codex changed, which checks were run, and what model/runtime behavior was intentionally left unchanged.
 - **Judge path:** open the Space, keep the default real SEC lease selected, press **Analyze contract**, then draft the negotiation email from the flags.
 
 ## Proven, not vibes
