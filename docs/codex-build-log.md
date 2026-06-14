@@ -21,6 +21,12 @@ Prepare Lease Lens for the Build Small Hackathon with maximum near-deadline leve
   evidence and a short judge path.
 - Added this build log as the public provenance artifact for reviewers once the
   repo is published.
+- Replaced the visible stock Gradio Blocks interface with a custom redline legal
+  evidence desk served through `gradio.Server`, with a styled Blocks fallback.
+- Added public frontend source files: `index.html`, `static/app.css`,
+  `static/app.js`, and `static/lease-lens-mark.svg`.
+- Added REST fallback routes beside the Gradio client APIs so the custom
+  frontend still works if a browser blocks the CDN JS client.
 - Updated the Gradio app to default to a real SEC-filed lease and show the SEC
   provenance banner on first load.
 - Kept model loading, prompting, scoring, extraction guards, and generation
@@ -47,16 +53,6 @@ Expected:
 - hardware is `zero-a10g`;
 - private is `False`;
 - SHA matches the latest pushed Space commit.
-
-## Codex Attribution Policy
-
-Use commit messages with this trailer:
-
-```text
-Co-authored-by: OpenAI Codex <codex@openai.com>
-```
-
-This keeps the public Git history explicit for the OpenAI Codex Track judge.
 
 ## Local Codex-Attributed Commits
 

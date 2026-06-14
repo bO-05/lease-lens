@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lease Lens</title>
+  <link rel="icon" href="/static/lease-lens-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <script id="lease-lens-bootstrap" type="application/json">__LEASE_LENS_BOOTSTRAP__</script>
+
+  <main class="desk-shell">
+    <section class="hero-grid" aria-labelledby="app-title">
+      <div class="hero-copy">
+        <div class="brand-row">
+          <img src="/static/lease-lens-mark.svg" alt="" width="42" height="42">
+          <span>Lease Lens</span>
+        </div>
+        <p class="eyebrow">Redline evidence desk · 3B legal model</p>
+        <h1 id="app-title">Read the lease before it reads you.</h1>
+        <p class="lede">Load a real SEC-filed lease, run a grounded clause scan, and turn the flags into a plain-English pushback letter. No external LLM API is called.</p>
+        <div id="proofChips" class="proof-chips" aria-label="Project proof points"></div>
+      </div>
+
+      <aside class="quickstart" aria-label="Judge quickstart">
+        <div class="quickstart-title">Judge path</div>
+        <ol>
+          <li><span>01</span><b>Load real filing</b></li>
+          <li><span>02</span><b>Analyze contract</b></li>
+          <li><span>03</span><b>Draft pushback</b></li>
+        </ol>
+      </aside>
+    </section>
+
+    <section class="workspace-grid" aria-label="Contract analysis workspace">
+      <section class="intake-panel panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">Input</p>
+            <h2>Contract docket</h2>
+          </div>
+          <button id="clearBtn" class="ghost-btn" type="button">Clear</button>
+        </div>
+
+        <label class="field-label" for="exampleSelect">Real filing or sample</label>
+        <select id="exampleSelect" class="select-control"></select>
+
+        <div id="sourceBanner" class="source-slot" aria-live="polite"></div>
+
+        <div class="upload-row">
+          <label class="file-btn" for="fileInput">Upload .txt</label>
+          <input id="fileInput" type="file" accept=".txt,text/plain">
+          <span id="fileName">or edit the docket text below</span>
+        </div>
+
+        <label class="field-label" for="contractText">Contract text</label>
+        <textarea id="contractText" spellcheck="false"></textarea>
+
+        <div class="action-row">
+          <button id="analyzeBtn" class="primary-btn" type="button">
+            <span class="btn-main">Analyze contract</span>
+            <span class="btn-sub">verbatim flags + risk score</span>
+          </button>
+          <div id="runState" class="run-state" aria-live="polite">Ready on ZeroGPU</div>
+        </div>
+      </section>
+
+      <section class="result-panel panel">
+        <div id="emptyState" class="empty-state">
+          <div class="stamp">Ready</div>
+          <h2>Evidence appears here.</h2>
+          <p>Run the default SEC lease first. A good result shows a score, verbatim flagged clauses, highlighted source text, and a negotiation letter draft.</p>
+        </div>
+
+        <div id="results" class="results hidden">
+          <div class="docket-summary">
+            <div id="scoreSeal" class="score-seal clean">
+              <span id="scoreValue">0</span>
+              <small>/100</small>
+            </div>
+            <div>
+              <p class="panel-kicker">Risk docket</p>
+              <h2 id="verdictText">Looks clean</h2>
+              <p id="summaryText" class="summary-text"></p>
+            </div>
+          </div>
+
+          <div class="result-split">
+            <div>
+              <div class="section-label">Clause flags</div>
+              <div id="findingCards" class="finding-stack"></div>
+              <div id="coverageNote" class="coverage-note"></div>
+            </div>
+            <div>
+              <div class="section-label">Source text</div>
+              <div id="highlightedDoc" class="document-view"></div>
+            </div>
+          </div>
+
+          <div class="letter-panel">
+            <div class="letter-head">
+              <div>
+                <p class="panel-kicker">Negotiation Letter</p>
+                <h2>Draft pushback</h2>
+              </div>
+              <button id="emailBtn" class="secondary-btn" type="button">Draft email</button>
+            </div>
+            <textarea id="emailOut" readonly placeholder="Run analysis, then draft an email from the flags."></textarea>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>

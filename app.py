@@ -1,13 +1,15 @@
-# Lease Lens v2.0 — ZeroGPU edition
-# Fine-tuned 3B legal model (adapter: giladam01/lease-lens-legal-3b) on @spaces.GPU.
-# All clause categories run in ONE batched generate -> seconds, not minutes.
+# Lease Lens v3.0 - custom evidence desk UI
+# Fine-tuned 3B legal model (adapter: giladam01/lease-lens-legal-3b) on ZeroGPU.
+# Model, prompts, extraction guards, scoring, and generation behavior are kept stable.
 import json
 import html as _html
+import os
+from pathlib import Path
 
-import torch
-import gradio as gr
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from peft import PeftModel
+try:
+    import gradio as gr
+except ImportError:  # local mock mode can still serve the custom frontend without Gradio.
+    gr = None
 
 try:
     import spaces  # provided on HF Spaces (ZeroGPU)
@@ -21,30 +23,42 @@ except ImportError:  # local fallback so the file also runs off-Spaces
             return deco
     spaces = _S()
 
+
+ROOT = Path(__file__).resolve().parent
+INDEX_HTML = ROOT / "index.html"
+STATIC_DIR = ROOT / "static"
+MOCK_MODE = os.getenv("LEASE_LENS_MOCK", "").strip() == "1"
+
 BASE = "unsloth/Llama-3.2-3B-Instruct"
 ADAPTER = "giladam01/lease-lens-legal-3b"
 
-tok = AutoTokenizer.from_pretrained(ADAPTER)
-tok.pad_token = tok.pad_token or tok.eos_token
-tok.padding_side = "left"  # decoder-only batch generation
-_base = AutoModelForCausalLM.from_pretrained(BASE, dtype=torch.bfloat16)
-# ZeroGPU FIX: at startup the platform emulates CUDA, which tricks PEFT into loading
-# adapter tensors straight onto a GPU that doesn't physically exist yet
-# ("No CUDA GPUs are available"). Force the adapter load onto CPU, merge there,
-# THEN move the merged model to (emulated) CUDA — the supported pattern.
-try:
-    model = PeftModel.from_pretrained(_base, ADAPTER, torch_device="cpu")
-except TypeError:  # older peft without torch_device kwarg: hide CUDA during the load
-    _avail, _cnt = torch.cuda.is_available, torch.cuda.device_count
-    torch.cuda.is_available = lambda: False
-    torch.cuda.device_count = lambda: 0
+if not MOCK_MODE:
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from peft import PeftModel
+
+    tok = AutoTokenizer.from_pretrained(ADAPTER)
+    tok.pad_token = tok.pad_token or tok.eos_token
+    tok.padding_side = "left"  # decoder-only batch generation
+    _base = AutoModelForCausalLM.from_pretrained(BASE, dtype=torch.bfloat16)
+    # ZeroGPU FIX: at startup the platform emulates CUDA, which tricks PEFT into loading
+    # adapter tensors straight onto a GPU that doesn't physically exist yet
+    # ("No CUDA GPUs are available"). Force the adapter load onto CPU, merge there,
+    # THEN move the merged model to (emulated) CUDA - the supported pattern.
     try:
-        model = PeftModel.from_pretrained(_base, ADAPTER)
-    finally:
-        torch.cuda.is_available, torch.cuda.device_count = _avail, _cnt
-model = model.merge_and_unload()
-model.to("cuda")  # ZeroGPU emulates CUDA at startup; real GPU attaches inside @spaces.GPU
-model.eval()
+        model = PeftModel.from_pretrained(_base, ADAPTER, torch_device="cpu")
+    except TypeError:  # older peft without torch_device kwarg: hide CUDA during the load
+        _avail, _cnt = torch.cuda.is_available, torch.cuda.device_count
+        torch.cuda.is_available = lambda: False
+        torch.cuda.device_count = lambda: 0
+        try:
+            model = PeftModel.from_pretrained(_base, ADAPTER)
+        finally:
+            torch.cuda.is_available, torch.cuda.device_count = _avail, _cnt
+    model = model.merge_and_unload()
+    model.to("cuda")  # ZeroGPU emulates CUDA at startup; real GPU attaches inside @spaces.GPU
+    model.eval()
+
 
 SYSTEM = ("You are a meticulous legal contract analyst. Given a contract excerpt and a clause "
           "category, extract the exact verbatim text of any clause that matches that category. "
@@ -85,139 +99,6 @@ def run_batch(user_msgs, max_new_tokens=128):
     return outs
 
 
-def highlight(contract, snippets):
-    esc = _html.escape(contract)
-    for s in snippets:
-        es = _html.escape(s.strip())
-        if len(es) > 3 and es in esc:
-            esc = esc.replace(es, '<mark style="background:#ffd86b;color:#1a1a1a;border-radius:3px">' + es + '</mark>', 1)
-    return ('<div style="white-space:pre-wrap;font-family:Georgia,\'Iowan Old Style\',serif;font-size:14px;'
-            'line-height:1.7;color:#e2e8f0;background:#0d1220;border:1px solid #27314e;padding:16px 18px;'
-            'border-radius:10px;max-height:440px;overflow:auto">' + esc + '</div>')
-
-
-def render_results(findings, skipped, n_checked):
-    score = sum(2 if f["risk"] == "high" else 1 for f in findings)
-    maxscore = sum(2 if c["risk"] == "high" else 1 for c in CLAUSES)
-    risk_pct = round(100 * score / maxscore) if maxscore else 0
-    high_n = sum(1 for f in findings if f["risk"] == "high")
-    verdict = "High risk" if high_n else ("Some risk" if findings else "Looks clean")
-    vcolor = "#fc8181" if high_n else ("#f6ad55" if findings else "#68d391")   # softened for dark mode
-    head = ('<div style="font-family:Inter,system-ui,sans-serif;display:flex;gap:20px;align-items:center;'
-            'background:#151d30;border:1px solid #27314e;border-radius:14px;padding:16px 20px;margin-bottom:14px">'
-            '<div style="font-size:40px;font-weight:700;color:' + vcolor + '">' + str(risk_pct) +
-            '<span style="font-size:18px;color:#9aa6c4">/100</span></div>'
-            '<div><div style="font-size:18px;font-weight:600;color:' + vcolor + '">' + verdict + '</div>'
-            '<div style="color:#9aa6c4;font-size:14px">' + str(len(findings)) + ' clauses flagged (' + str(high_n) +
-            ' high-risk) of ' + str(n_checked) + ' checked</div></div></div>')
-    cards = []
-    for f in sorted(findings, key=lambda x: 0 if x["risk"] == "high" else 1):
-        color = "#fc8181" if f["risk"] == "high" else "#f6ad55"
-        tag = "High risk" if f["risk"] == "high" else "Review"
-        cards.append(
-          '<div style="border-left:5px solid ' + color + ';background:rgba(255,255,255,0.05);border-radius:10px;'
-          'padding:14px 16px;margin-bottom:14px;color:#e2e8f0;font-family:Inter,system-ui,sans-serif">'
-          '<div style="display:flex;gap:10px;align-items:center"><b style="font-size:16px;color:#f8fafc">' + _html.escape(f["label"]) + '</b>'
-          '<span style="font-size:11px;color:' + color + ';border:1px solid ' + color + ';border-radius:6px;padding:2px 8px">' + tag + '</span></div>'
-          '<div style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:13px;color:#e2e8f0;background:#0d1220;'
-          'border-radius:8px;padding:11px 13px;margin:11px 0;white-space:pre-wrap;line-height:1.55">' + _html.escape(f["text"]) + '</div>'
-          '<div style="color:#cbd5e0;font-size:14px;line-height:1.5">💡 <b style="color:#90cdf4">Why this matters:</b> ' + _html.escape(f["why"]) + '</div>'
-          '<div style="color:#9ae6b4;font-size:14px;margin-top:6px;line-height:1.5">✋ <b style="color:#9ae6b4">Push back:</b> ' + _html.escape(f["tip"]) + '</div></div>')
-    body = head + ("".join(cards) if findings else
-                   '<p style="color:#5fe0a0;font-family:Inter,sans-serif">No risky clauses flagged.</p>')
-    if skipped:
-        body += ('<div style="font-family:Inter,system-ui,sans-serif;color:#9aa6c4;font-size:13px;margin-top:10px">'
-                 'Coverage: checked ' + str(n_checked) + ' of ' + str(len(CLAUSES)) +
-                 ' clause types; skipped (keywords absent): ' + ", ".join(skipped) + '</div>')
-    body += ('<div style="font-family:Inter,system-ui,sans-serif;color:#6b7689;font-size:12px;margin-top:8px">'
-             'Not legal advice — every flag is a draft for review.</div>')
-    return body
-
-
-def analyze(text):
-    text = (text or "").strip()
-    if len(text) < 40:
-        yield '<p style="color:#ffb653;font-family:Inter,sans-serif">Paste or pick a contract first.</p>', "", "[]"
-        return
-    cn = " ".join(text.lower().split())
-    # CHUNKED ANALYSIS: real contracts are long. Split into overlapping windows (first 80k
-    # chars) and route each clause category only to windows containing its keywords.
-    WIN, STRIDE, CAP = 5000, 4000, 80000
-    body_text = text[:CAP]
-    chunks = [body_text[s:s + WIN] for s in range(0, max(len(body_text), 1), STRIDE)]
-    chunks = [c for c in chunks if len(c) > 200] or [body_text]
-    pairs = []                                   # (clause, chunk_text)
-    for c in CLAUSES:
-        hit = [ch for ch in chunks if any(k in " ".join(ch.lower().split()) for k in c["kw"])]
-        for ch in hit[:6]:                        # cap windows per category
-            pairs.append((c, ch))
-    covered = {c["label"] for c, _ in pairs}
-    skipped = [c["label"] for c in CLAUSES if c["label"] not in covered]
-    if not pairs:
-        yield ('<p style="color:#5fe0a0;font-family:Inter,sans-serif">No risky clauses flagged '
-               '(no clause keywords present in this text).</p>'), highlight(text, []), "[]"
-        return
-    yield ('<div style="font-family:Inter,system-ui,sans-serif;color:#9aa6c4;background:#151d30;border:1px solid #27314e;'
-           'border-radius:12px;padding:12px 16px">⚡ Running ' + str(len(pairs)) + ' checks across ' +
-           str(len(chunks)) + ' document windows (' + str(len(body_text)) +
-           ' chars) in batched passes on ZeroGPU…</div>'), highlight(text, []), "[]"
-
-    msgs = [("Highlight any part of this contract related to: " + c["cat"] +
-             ". If there is none, reply NONE.\n\n---\nContract:\n" + ch) for c, ch in pairs]
-    try:
-        answers = run_batch(msgs)
-    except Exception as e:
-        yield ('<div style="color:#ff5d6c;font-family:Inter,sans-serif">GPU call failed: ' +
-               _html.escape(str(e)[:200]) + ' — try again in a minute (ZeroGPU queue).</div>'), highlight(text, []), "[]"
-        return
-
-    findings, snippets, used, found_cats = [], [], [], set()
-    for (c, _ch), a in zip(pairs, answers):
-        if c["label"] in found_cats:                                        # first good hit wins
-            continue
-        a = (a or "").strip()
-        if a.upper() == "NONE" or len(a) <= 3:
-            continue
-        cand = a.split(" | ")[0].strip()
-        ncs = " ".join(cand.lower().split())
-        if len(ncs) < 12 or ncs[:60] not in cn:                            # grounding (full doc)
-            continue
-        if any(ncs[:80] == u[:80] or ncs in u or u in ncs for u in used):  # dedup
-            continue
-        if not any(k in ncs for k in c["kw"]):                             # keyword guard
-            continue
-        used.append(ncs); snippets.append(cand)
-        findings.append({**c, "text": cand}); found_cats.add(c["label"])
-
-    state = json.dumps([{"label": f["label"], "text": f["text"], "tip": f["tip"]} for f in findings])
-    extra = ('' if len(text) <= CAP else
-             '<div style="font-family:Inter,system-ui,sans-serif;color:#9aa6c4;font-size:13px;margin-top:6px">'
-             'Note: analyzed the first ' + str(CAP) + ' of ' + str(len(text)) + ' characters.</div>')
-    yield render_results(findings, skipped, len(covered)) + extra, highlight(text, snippets), state
-
-
-def draft_email(state):
-    try:
-        findings = json.loads(state or "[]")
-    except Exception:
-        findings = []
-    if not findings:
-        return "Run an analysis first — then I can draft the email from the flagged clauses."
-    lines = []
-    for f in findings:
-        lines.append("- " + f["label"] + ': "' + f["text"][:220] + '" -> ask: ' + f["tip"])
-    msg = ("Write a short, polite, plain-English email to the other party of a contract, "
-           "proposing changes to these flagged clauses. No legalese (say 'under' not 'pursuant to'). "
-           "For each clause: what it currently says, and the change we request. Factual tone; do not "
-           "say 'you should' or give legal advice. End asking for a revised draft.\n\nFlagged clauses:\n"
-           + "\n".join(lines))
-    try:
-        out = run_batch([msg], max_new_tokens=400)[0]
-    except Exception as e:
-        return "GPU call failed: " + str(e)[:200] + " — try again shortly."
-    return out + "\n\n---\nDraft for review — not legal advice."
-
-
 EXAMPLES = {
 "Apartment lease": """RESIDENTIAL LEASE AGREEMENT (excerpt)
 
@@ -251,24 +132,7 @@ EXAMPLES = {
 5. RELEASE OF LIABILITY. Member uses all facilities at Member's own risk and releases the Gym from any and all liability, including claims arising from the Gym's own negligence.""",
 }
 
-CSS = """
-footer{display:none!important}
-.gradio-container{background:#0d1220!important; max-width:1180px!important}
-#hdr h1{color:#eaeefb; font-family:Inter,system-ui,sans-serif; margin-bottom:0}
-#hdr p{color:#9aa6c4; font-family:Inter,system-ui,sans-serif}
-#hdr .chip{display:inline-block;font-family:monospace;font-size:12px;color:#39d3c5;background:rgba(57,211,197,.1);
-  border:1px solid rgba(57,211,197,.35);padding:4px 10px;border-radius:999px;margin-right:6px}
-#go_row{margin:14px 0}
-"""
-
-EMPTY_STATE = ('<div style="font-family:Inter,system-ui,sans-serif;color:#9aa6c4;text-align:center;'
-               'background:rgba(255,255,255,0.03);border:1px dashed #27314e;border-radius:12px;padding:34px 20px">'
-               '<div style="font-size:34px;margin-bottom:8px">🔍</div>'
-               'Pick an example (or upload a contract) above and press <b style="color:#e2e8f0">⚡ Analyze contract</b> '
-               'to see the risk score, flagged clauses, and highlights here.</div>')
-
-
-# Real executed leases from SEC EDGAR filings (public record) — judges can analyze a genuine
+# Real executed leases from SEC EDGAR filings (public record) - judges can analyze a genuine
 # contract in one click, not just the teaching samples.
 REAL_SOURCES = {}
 try:
@@ -277,62 +141,426 @@ try:
 except Exception as _e:
     print("sample_contracts not loaded:", _e)
 
-
-def _source_banner(name):
-    url = REAL_SOURCES.get(name)
-    if not url:
-        return ""   # synthetic teaching sample — no source banner
-    return ('<div style="font-family:Inter,system-ui,sans-serif;font-size:13px;color:#90cdf4;'
-            'background:rgba(144,205,244,0.08);border:1px solid rgba(144,205,244,0.3);'
-            'border-radius:10px;padding:10px 14px;margin-bottom:8px">'
-            '📄 <b>Real executed contract</b>, public SEC filing — '
-            '<a href="' + url + '" target="_blank" rel="noopener noreferrer" '
-            'style="color:#90cdf4;text-decoration:underline">verify the source on sec.gov ↗</a> · '
-            'outside the model\'s training data.</div>')
-
-
-def load_example(name):
-    # returns (contract_text, source_banner_html)
-    return EXAMPLES.get(name, ""), _source_banner(name)
-
-
-def load_file(path):
-    if not path:
-        return "", ""
-    with open(path, "r", errors="ignore") as fh:
-        return fh.read(), ""   # uploaded file: no SEC source banner
-
-
 DEFAULT_EXAMPLE = next(iter(EXAMPLES))
 
 
-# Gradio 5.x (pinned via README sdk_version): css belongs in the Blocks constructor.
-with gr.Blocks(css=CSS, title="Lease Lens") as demo:
-    gr.HTML('<div id="hdr"><h1>🔍 Lease Lens</h1>'
-            '<p>Paste a lease or contract — a <b>fine-tuned 3B legal model</b> scores the risk, flags clauses '
-            'verbatim, highlights them in the text, and drafts your negotiation email.</p>'
-            '<span class="chip">⚡ ZeroGPU · seconds per analysis</span>'
-            '<span class="chip">3B fine-tune · +242% F1 vs base</span>'
-            '<span class="chip">also ships as GGUF for llama.cpp</span></div>')
-    with gr.Row():
-        ex = gr.Dropdown(choices=list(EXAMPLES.keys()), value=DEFAULT_EXAMPLE, label="Load a real-world example")
-        up = gr.File(label="…or upload your own .txt contract", file_types=[".txt"], type="filepath")
-    src_banner = gr.HTML(value=_source_banner(DEFAULT_EXAMPLE))   # shows SEC provenance when a real lease is selected
-    inp = gr.Textbox(value=EXAMPLES[DEFAULT_EXAMPLE], lines=10, max_lines=20, label="Contract text")
-    with gr.Row(elem_id="go_row"):
-        btn = gr.Button("⚡ Analyze contract", variant="primary", scale=4)
-        clear_btn = gr.Button("Clear", variant="secondary", scale=1)
-    st = gr.State("[]")
-    with gr.Row():
-        out_cards = gr.HTML(value=EMPTY_STATE)
-        out_doc = gr.HTML()
-    with gr.Accordion("✉️ Draft a negotiation email from the flags", open=False):
-        email_btn = gr.Button("Draft email")
-        email_out = gr.Textbox(lines=12, label="Draft (copy-paste, edit before sending)", show_copy_button=True)
-    ex.change(load_example, ex, [inp, src_banner])
-    up.upload(load_file, up, [inp, src_banner])
-    btn.click(analyze, inp, [out_cards, out_doc, st])
-    email_btn.click(draft_email, st, email_out)
-    clear_btn.click(lambda: ("", "", EMPTY_STATE, "", "[]"), None, [inp, src_banner, out_cards, out_doc, st])
+def _source_banner_html(name):
+    url = REAL_SOURCES.get(name)
+    if not url:
+        return ""
+    return ('<div class="source-banner">'
+            '<span class="source-dot">SEC</span>'
+            '<b>Real executed contract</b>, public filing - '
+            '<a href="' + _html.escape(url, quote=True) + '" target="_blank" rel="noopener noreferrer">'
+            'verify the source on sec.gov</a> · outside the model training data.</div>')
 
-demo.queue().launch(ssr_mode=False, show_error=True)
+
+def get_example_payload(name):
+    if name not in EXAMPLES:
+        name = DEFAULT_EXAMPLE
+    return {
+        "name": name,
+        "text": EXAMPLES.get(name, ""),
+        "source_url": REAL_SOURCES.get(name, ""),
+        "source_banner_html": _source_banner_html(name),
+        "is_real": name in REAL_SOURCES,
+    }
+
+
+def bootstrap_payload():
+    return {
+        "examples": list(EXAMPLES.keys()),
+        "default_example": DEFAULT_EXAMPLE,
+        "proof_chips": [
+            "3B fine-tune",
+            "+242% F1 vs base",
+            "SEC-filed examples",
+            "GGUF / llama.cpp",
+            "ZeroGPU",
+            "No external LLM API",
+        ],
+        "mock_mode": MOCK_MODE,
+    }
+
+
+def highlight_html(contract, snippets):
+    esc = _html.escape(contract)
+    for s in snippets:
+        es = _html.escape((s or "").strip())
+        if len(es) > 3 and es in esc:
+            esc = esc.replace(es, '<mark>' + es + '</mark>', 1)
+    return '<div class="contract-page">' + esc + '</div>'
+
+
+def _score_findings(findings):
+    score = sum(2 if f["risk"] == "high" else 1 for f in findings)
+    maxscore = sum(2 if c["risk"] == "high" else 1 for c in CLAUSES)
+    risk_pct = round(100 * score / maxscore) if maxscore else 0
+    high_n = sum(1 for f in findings if f["risk"] == "high")
+    verdict = "High risk" if high_n else ("Some risk" if findings else "Looks clean")
+    return risk_pct, high_n, verdict
+
+
+def _analysis_payload(text, findings, skipped, n_checked, snippets, chunk_count=0, char_count=0, note=""):
+    risk_pct, high_n, verdict = _score_findings(findings)
+    return {
+        "status": "ok",
+        "score": risk_pct,
+        "verdict": verdict,
+        "high_count": high_n,
+        "flag_count": len(findings),
+        "checked_count": n_checked,
+        "total_clause_count": len(CLAUSES),
+        "skipped": skipped,
+        "findings": findings,
+        "snippets": snippets,
+        "highlighted_html": highlight_html(text, snippets),
+        "coverage_note": note,
+        "chunk_count": chunk_count,
+        "char_count": char_count,
+        "mock_mode": MOCK_MODE,
+        "disclaimer": "Not legal advice - every flag is a draft for review.",
+    }
+
+
+def _quote_near_keyword(text, keywords):
+    lower = text.lower()
+    hits = [lower.find(k) for k in keywords if lower.find(k) >= 0]
+    if not hits:
+        return ""
+    idx = min(hits)
+    start = max(0, idx - 180)
+    end = min(len(text), idx + 420)
+    return text[start:end].strip()
+
+
+def _mock_analyze_contract(text):
+    text = (text or "").strip()
+    if len(text) < 40:
+        return {"status": "empty", "message": "Paste or pick a contract first.", "findings": []}
+    findings, snippets, covered = [], [], set()
+    for c in CLAUSES:
+        quote = _quote_near_keyword(text, c["kw"])
+        if not quote:
+            continue
+        covered.add(c["label"])
+        if len(findings) >= 5:
+            continue
+        snippets.append(quote)
+        findings.append({**c, "text": quote})
+    skipped = [c["label"] for c in CLAUSES if c["label"] not in covered]
+    if not findings and covered:
+        findings.append({**CLAUSES[0], "text": text[:420].strip()})
+        snippets.append(findings[0]["text"])
+    return _analysis_payload(text, findings, skipped, len(covered), snippets,
+                             chunk_count=1, char_count=len(text),
+                             note="Mock UI mode: deterministic local preview, not model output.")
+
+
+def analyze_contract_payload(text):
+    if MOCK_MODE:
+        return _mock_analyze_contract(text)
+
+    text = (text or "").strip()
+    if len(text) < 40:
+        return {"status": "empty", "message": "Paste or pick a contract first.", "findings": []}
+    cn = " ".join(text.lower().split())
+    # CHUNKED ANALYSIS: real contracts are long. Split into overlapping windows (first 80k
+    # chars) and route each clause category only to windows containing its keywords.
+    WIN, STRIDE, CAP = 5000, 4000, 80000
+    body_text = text[:CAP]
+    chunks = [body_text[s:s + WIN] for s in range(0, max(len(body_text), 1), STRIDE)]
+    chunks = [c for c in chunks if len(c) > 200] or [body_text]
+    pairs = []  # (clause, chunk_text)
+    for c in CLAUSES:
+        hit = [ch for ch in chunks if any(k in " ".join(ch.lower().split()) for k in c["kw"])]
+        for ch in hit[:6]:
+            pairs.append((c, ch))
+    covered = {c["label"] for c, _ in pairs}
+    skipped = [c["label"] for c in CLAUSES if c["label"] not in covered]
+    if not pairs:
+        return _analysis_payload(text, [], skipped, 0, [], len(chunks), len(body_text))
+
+    msgs = [("Highlight any part of this contract related to: " + c["cat"] +
+             ". If there is none, reply NONE.\n\n---\nContract:\n" + ch) for c, ch in pairs]
+    try:
+        answers = run_batch(msgs)
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": "GPU call failed: " + str(e)[:200] + " - try again in a minute (ZeroGPU queue).",
+            "findings": [],
+            "highlighted_html": highlight_html(text, []),
+        }
+
+    findings, snippets, used, found_cats = [], [], [], set()
+    for (c, _ch), a in zip(pairs, answers):
+        if c["label"] in found_cats:
+            continue
+        a = (a or "").strip()
+        if a.upper() == "NONE" or len(a) <= 3:
+            continue
+        cand = a.split(" | ")[0].strip()
+        ncs = " ".join(cand.lower().split())
+        if len(ncs) < 12 or ncs[:60] not in cn:
+            continue
+        if any(ncs[:80] == u[:80] or ncs in u or u in ncs for u in used):
+            continue
+        if not any(k in ncs for k in c["kw"]):
+            continue
+        used.append(ncs)
+        snippets.append(cand)
+        findings.append({**c, "text": cand})
+        found_cats.add(c["label"])
+
+    note = ""
+    if len(text) > CAP:
+        note = "Analyzed the first " + str(CAP) + " of " + str(len(text)) + " characters."
+    return _analysis_payload(text, findings, skipped, len(covered), snippets, len(chunks), len(body_text), note)
+
+
+def draft_email_payload(state_json):
+    try:
+        findings = json.loads(state_json or "[]")
+    except Exception:
+        findings = []
+    if not findings:
+        return {"status": "empty", "email": "Run an analysis first - then I can draft the email from the flagged clauses."}
+    lines = []
+    for f in findings:
+        lines.append("- " + f["label"] + ': "' + f["text"][:220] + '" -> ask: ' + f["tip"])
+
+    if MOCK_MODE:
+        return {
+            "status": "ok",
+            "email": (
+                "Subject: Lease revision requests\n\n"
+                "Hi,\n\n"
+                "I reviewed the draft and would like to discuss a few clauses before signing:\n\n"
+                + "\n".join(lines[:4]) +
+                "\n\nCould you send a revised draft reflecting these changes?\n\nThanks,\n\n---\nDraft for review - not legal advice."
+            ),
+        }
+
+    msg = ("Write a short, polite, plain-English email to the other party of a contract, "
+           "proposing changes to these flagged clauses. No legalese (say 'under' not 'pursuant to'). "
+           "For each clause: what it currently says, and the change we request. Factual tone; do not "
+           "say 'you should' or give legal advice. End asking for a revised draft.\n\nFlagged clauses:\n"
+           + "\n".join(lines))
+    try:
+        out = run_batch([msg], max_new_tokens=400)[0]
+    except Exception as e:
+        return {"status": "error", "email": "GPU call failed: " + str(e)[:200] + " - try again shortly."}
+    return {"status": "ok", "email": out + "\n\n---\nDraft for review - not legal advice."}
+
+
+def _index_html():
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    return html.replace("__LEASE_LENS_BOOTSTRAP__", json.dumps(bootstrap_payload()))
+
+
+def launch_server():
+    Server = getattr(gr, "Server", None)
+    if Server is None:
+        return launch_blocks_fallback()
+
+    from fastapi import Request
+    from fastapi.responses import HTMLResponse, FileResponse
+
+    app = Server()
+
+    @app.api(name="get_example")
+    def get_example(name: str):
+        return get_example_payload(name)
+
+    @app.api(name="analyze_contract")
+    def analyze_contract(text: str):
+        return analyze_contract_payload(text)
+
+    @app.api(name="draft_email")
+    def draft_email(state_json: str):
+        return draft_email_payload(state_json)
+
+    @app.get("/api/get_example")
+    async def rest_get_example(name: str = DEFAULT_EXAMPLE):
+        return get_example_payload(name)
+
+    @app.post("/api/analyze_contract")
+    async def rest_analyze_contract(request: Request):
+        data = await request.json()
+        return analyze_contract_payload(data.get("text", ""))
+
+    @app.post("/api/draft_email")
+    async def rest_draft_email(request: Request):
+        data = await request.json()
+        return draft_email_payload(data.get("state_json", "[]"))
+
+    @app.get("/", response_class=HTMLResponse)
+    async def homepage():
+        return _index_html()
+
+    @app.get("/static/{file_path:path}")
+    async def static_files(file_path: str):
+        target = (STATIC_DIR / file_path).resolve()
+        if STATIC_DIR.resolve() not in target.parents and target != STATIC_DIR.resolve():
+            raise FileNotFoundError(file_path)
+        return FileResponse(target)
+
+    app.launch(show_error=True)
+
+
+CSS_FALLBACK = """
+footer{display:none!important}
+.gradio-container{background:#090b0f!important; max-width:1240px!important}
+#hdr{background:#11151d;border:1px solid #52442c;border-radius:8px;padding:20px 22px;margin-bottom:14px}
+#hdr h1{color:#f4ead7;font-family:Georgia,serif;margin:0 0 4px;font-size:34px}
+#hdr p{color:#c9bdab;font-family:Segoe UI,sans-serif;max-width:760px}
+#hdr .chip{display:inline-block;font-family:ui-monospace,monospace;font-size:12px;color:#6bd7d2;background:rgba(107,215,210,.09);
+  border:1px solid rgba(107,215,210,.35);padding:5px 10px;border-radius:999px;margin:5px 6px 0 0}
+#go_row{margin:14px 0}
+"""
+
+
+def _render_blocks_results(data):
+    if data.get("status") == "empty":
+        return '<div style="color:#e3b15f;font-family:Segoe UI,sans-serif">' + data["message"] + '</div>'
+    if data.get("status") == "error":
+        return '<div style="color:#ff6b6b;font-family:Segoe UI,sans-serif">' + _html.escape(data["message"]) + '</div>'
+    cards = [
+        '<div style="background:#11151d;border:1px solid #52442c;border-radius:8px;padding:16px;color:#f4ead7;font-family:Segoe UI,sans-serif;margin-bottom:12px">'
+        '<div style="font-family:Georgia,serif;font-size:38px;color:#b73737">' + str(data["score"]) + '<span style="font-size:16px;color:#9f927d">/100</span></div>'
+        '<b>' + _html.escape(data["verdict"]) + '</b><br>'
+        '<span style="color:#9f927d">' + str(data["flag_count"]) + ' clauses flagged of ' + str(data["checked_count"]) + ' checked</span></div>'
+    ]
+    for f in data.get("findings", []):
+        cards.append('<div style="border-left:4px solid #b73737;background:#121821;border-radius:8px;padding:13px;margin-bottom:10px;color:#f4ead7">'
+                     '<b>' + _html.escape(f["label"]) + '</b>'
+                     '<pre style="white-space:pre-wrap;color:#e5dccd;background:#090b0f;padding:10px;border-radius:6px">' + _html.escape(f["text"]) + '</pre>'
+                     '<div style="color:#c9bdab">Why: ' + _html.escape(f["why"]) + '</div>'
+                     '<div style="color:#84d39b">Push back: ' + _html.escape(f["tip"]) + '</div></div>')
+    return "".join(cards)
+
+
+def launch_blocks_fallback():
+    if gr is None:
+        raise RuntimeError("Gradio is required unless LEASE_LENS_MOCK=1 is used.")
+    with gr.Blocks(css=CSS_FALLBACK, title="Lease Lens") as demo:
+        gr.HTML('<div id="hdr"><h1>Lease Lens</h1>'
+                '<p>Read the lease before it reads you. A fine-tuned 3B legal model scores risk, flags verbatim clauses, highlights evidence, and drafts pushback.</p>'
+                '<span class="chip">3B fine-tune</span><span class="chip">+242% F1 vs base</span>'
+                '<span class="chip">SEC-filed examples</span><span class="chip">GGUF / llama.cpp</span></div>')
+        with gr.Row():
+            ex = gr.Dropdown(choices=list(EXAMPLES.keys()), value=DEFAULT_EXAMPLE, label="Load a real filing or sample")
+            up = gr.File(label="...or upload your own .txt contract", file_types=[".txt"], type="filepath")
+        src_banner = gr.HTML(value=_source_banner_html(DEFAULT_EXAMPLE))
+        inp = gr.Textbox(value=EXAMPLES[DEFAULT_EXAMPLE], lines=10, max_lines=20, label="Contract text")
+        with gr.Row(elem_id="go_row"):
+            btn = gr.Button("Analyze contract", variant="primary", scale=4)
+            clear_btn = gr.Button("Clear", variant="secondary", scale=1)
+        st = gr.State("[]")
+        with gr.Row():
+            out_cards = gr.HTML()
+            out_doc = gr.HTML()
+        with gr.Accordion("Negotiation Letter", open=False):
+            email_btn = gr.Button("Draft pushback")
+            email_out = gr.Textbox(lines=12, label="Draft for review", show_copy_button=True)
+
+        def load_example(name):
+            payload = get_example_payload(name)
+            return payload["text"], payload["source_banner_html"]
+
+        def load_file(path):
+            if not path:
+                return "", ""
+            with open(path, "r", errors="ignore") as fh:
+                return fh.read(), ""
+
+        def analyze_blocks(text):
+            data = analyze_contract_payload(text)
+            return _render_blocks_results(data), data.get("highlighted_html", ""), json.dumps(data.get("findings", []))
+
+        def draft_blocks(state_json):
+            return draft_email_payload(state_json).get("email", "")
+
+        ex.change(load_example, ex, [inp, src_banner])
+        up.upload(load_file, up, [inp, src_banner])
+        btn.click(analyze_blocks, inp, [out_cards, out_doc, st])
+        email_btn.click(draft_blocks, st, email_out)
+        clear_btn.click(lambda: ("", "", "", "", "[]"), None, [inp, src_banner, out_cards, out_doc, st])
+
+    demo.queue().launch(ssr_mode=False, show_error=True)
+
+
+def launch_stdlib_mock_server():
+    import mimetypes
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    from urllib.parse import parse_qs, urlparse
+
+    class Handler(BaseHTTPRequestHandler):
+        def _json(self, payload, status=200):
+            body = json.dumps(payload).encode("utf-8")
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def _read_json(self):
+            length = int(self.headers.get("Content-Length", "0"))
+            raw = self.rfile.read(length).decode("utf-8") if length else "{}"
+            return json.loads(raw or "{}")
+
+        def do_GET(self):
+            parsed = urlparse(self.path)
+            if parsed.path == "/":
+                body = _index_html().encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            if parsed.path == "/api/get_example":
+                name = parse_qs(parsed.query).get("name", [DEFAULT_EXAMPLE])[0]
+                self._json(get_example_payload(name))
+                return
+            if parsed.path.startswith("/static/"):
+                rel = parsed.path.replace("/static/", "", 1)
+                target = (STATIC_DIR / rel).resolve()
+                if not target.exists() or STATIC_DIR.resolve() not in target.parents:
+                    self.send_error(404)
+                    return
+                body = target.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", mimetypes.guess_type(str(target))[0] or "application/octet-stream")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            self.send_error(404)
+
+        def do_POST(self):
+            if self.path == "/api/analyze_contract":
+                self._json(analyze_contract_payload(self._read_json().get("text", "")))
+                return
+            if self.path == "/api/draft_email":
+                self._json(draft_email_payload(self._read_json().get("state_json", "[]")))
+                return
+            self.send_error(404)
+
+    host = os.getenv("HOST", "127.0.0.1")
+    port = int(os.getenv("PORT", "7860"))
+    print(f"Lease Lens mock UI running on http://{host}:{port}")
+    ThreadingHTTPServer((host, port), Handler).serve_forever()
+
+
+def launch():
+    if gr is None:
+        if MOCK_MODE:
+            return launch_stdlib_mock_server()
+        raise RuntimeError("Gradio is not installed. Hugging Face Spaces provides it via sdk_version.")
+    return launch_server()
+
+
+if __name__ == "__main__":
+    launch()

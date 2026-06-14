@@ -80,6 +80,8 @@ datasets:
 
 Paste any contract → verbatim risky-clause flags, a risk score, in-text highlighting, plain-English "push back" tips, and a one-click negotiation email. The entire model runs inside this Space — **no external LLM API is ever called**.
 
+The Space now uses a custom **redline legal evidence desk** frontend around the same Gradio/ZeroGPU backend: a real SEC filing loads by default, the judge path is visible on the first screen, and results render as a risk docket with clause evidence and a negotiation letter panel.
+
 ## Submission Snapshot
 
 | | |
@@ -145,6 +147,7 @@ Each is built into the app's dropdown and links to its original SEC filing — c
 - **Three guards** keep flags honest: the quote must appear verbatim in the contract, can't repeat across categories, and must contain category-relevant terms.
 - **Coverage declaration** on every result: which clause types were checked, which skipped, and how much of the document was read.
 - **✉️ Negotiation email**: one click turns the flags into a polite, plain-English push-back email (draft for review).
+- **Custom UI without a build step**: `gradio.Server` serves vanilla `index.html`, `static/app.css`, and `static/app.js`; if `Server` is unavailable, the app falls back to a styled Gradio Blocks interface.
 
 ## Run it on your own machine (offline)
 
