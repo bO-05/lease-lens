@@ -27,6 +27,9 @@ Prepare Lease Lens for the Build Small Hackathon with maximum near-deadline leve
   `static/app.js`, and `static/lease-lens-mark.svg`.
 - Added REST fallback routes beside the Gradio client APIs so the custom
   frontend still works if a browser blocks the CDN JS client.
+- Polished the ZeroGPU-safe Gradio Blocks fallback with a branded legal
+  workbench, judge workflow rail, risk docket cards, highlighted evidence pane,
+  and an explicit analyzing/waiting state before the queued GPU call runs.
 - Updated the Gradio app to default to a real SEC-filed lease and show the SEC
   provenance banner on first load.
 - Kept model loading, prompting, scoring, extraction guards, and generation

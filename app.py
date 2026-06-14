@@ -411,33 +411,298 @@ def launch_server():
 
 CSS_FALLBACK = """
 footer{display:none!important}
-.gradio-container{background:#090b0f!important; max-width:1240px!important}
-#hdr{background:#11151d;border:1px solid #52442c;border-radius:8px;padding:20px 22px;margin-bottom:14px}
-#hdr h1{color:#f4ead7;font-family:Georgia,serif;margin:0 0 4px;font-size:34px}
-#hdr p{color:#c9bdab;font-family:Segoe UI,sans-serif;max-width:760px}
-#hdr .chip{display:inline-block;font-family:ui-monospace,monospace;font-size:12px;color:#6bd7d2;background:rgba(107,215,210,.09);
-  border:1px solid rgba(107,215,210,.35);padding:5px 10px;border-radius:999px;margin:5px 6px 0 0}
-#go_row{margin:14px 0}
+:root{
+  --ll-ink:#08090b;
+  --ll-panel:#10141b;
+  --ll-panel-2:#151b24;
+  --ll-paper:#f5ecd9;
+  --ll-muted:#b9aa91;
+  --ll-brass:#c49a4a;
+  --ll-red:#c33b37;
+  --ll-cyan:#67d7d4;
+  --ll-green:#7fdca1;
+  --ll-line:rgba(196,154,74,.34);
+}
+html,body,body.dark{background:#08090b!important;color:var(--ll-paper)!important;overflow-x:hidden!important}
+.gradio-container{
+  max-width:1280px!important;
+  margin:0 auto!important;
+  padding:18px 18px 42px!important;
+  background:
+    linear-gradient(90deg,rgba(196,154,74,.04) 1px,transparent 1px),
+    linear-gradient(rgba(196,154,74,.035) 1px,transparent 1px),
+    radial-gradient(circle at 14% 0%,rgba(195,59,55,.16),transparent 34%),
+    radial-gradient(circle at 88% 12%,rgba(103,215,212,.12),transparent 30%),
+    #08090b!important;
+  background-size:34px 34px,34px 34px,auto,auto,auto!important;
+  box-shadow:0 0 0 100vmax #08090b!important;
+  color:var(--ll-paper)!important;
+  font-family:"Segoe UI",ui-sans-serif,system-ui,sans-serif!important;
+}
+.gradio-container .block,
+.gradio-container .form,
+.gradio-container .wrap,
+.gradio-container .contain{
+  background:transparent!important;
+  border-color:transparent!important;
+  color:var(--ll-paper)!important;
+}
+.gradio-container label,
+.gradio-container label span,
+.gradio-container .label-wrap,
+.gradio-container .label-wrap span{
+  color:#eadfca!important;
+  font-weight:750!important;
+  letter-spacing:0!important;
+}
+.gradio-container textarea,
+.gradio-container input,
+.gradio-container select{
+  background:#0c1016!important;
+  border:1px solid rgba(196,154,74,.38)!important;
+  color:#f6efe1!important;
+  border-radius:8px!important;
+}
+.gradio-container textarea:focus,
+.gradio-container input:focus{
+  border-color:rgba(103,215,212,.72)!important;
+  box-shadow:0 0 0 3px rgba(103,215,212,.12)!important;
+}
+#hdr{
+  position:relative;
+  overflow:hidden;
+  border:1px solid var(--ll-line);
+  border-radius:8px;
+  background:
+    linear-gradient(135deg,rgba(245,236,217,.07),rgba(245,236,217,.015) 46%,rgba(195,59,55,.12)),
+    #10141b;
+  box-shadow:0 20px 70px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.04);
+  padding:22px;
+  margin-bottom:16px;
+}
+#hdr:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,transparent 0 49%,rgba(196,154,74,.11) 50%,transparent 51%),
+             linear-gradient(transparent 0 49%,rgba(196,154,74,.08) 50%,transparent 51%);
+  background-size:28px 28px;
+  opacity:.28;
+  pointer-events:none;
+}
+#hdr > *{position:relative}
+.lease-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}
+.lease-brand{display:flex;align-items:center;gap:12px}
+.lease-seal{
+  width:42px;height:42px;display:grid;place-items:center;border:1px solid rgba(196,154,74,.62);
+  border-radius:8px;background:#0b0f14;color:var(--ll-cyan);font-family:Georgia,serif;font-weight:900;
+  box-shadow:inset 0 0 0 1px rgba(103,215,212,.12);
+}
+.lease-name{font-family:Georgia,"Times New Roman",serif;font-size:28px;font-weight:900;color:#f8efd9;line-height:1}
+.lease-sub{font-size:12px;color:var(--ll-muted);font-family:ui-monospace,Consolas,monospace;text-transform:uppercase}
+.proof-strip{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px;max-width:690px}
+.proof-chip{
+  font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#bdf4f1;background:rgba(103,215,212,.08);
+  border:1px solid rgba(103,215,212,.32);padding:6px 9px;border-radius:999px;white-space:nowrap;
+}
+.hero-line{max-width:790px}
+.eyebrow{margin:0 0 8px;color:var(--ll-brass);font-size:12px;font-weight:900;font-family:ui-monospace,Consolas,monospace;text-transform:uppercase}
+#hdr h1{color:#fbf0d9;font-family:Georgia,"Times New Roman",serif;margin:0;font-size:44px;line-height:1.02;letter-spacing:0}
+#hdr p.hero-copy{color:#d8ccb7;font-size:16px;line-height:1.55;max-width:820px;margin:12px 0 0}
+.judge-rail{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:20px}
+.rail-step{background:rgba(8,9,11,.56);border:1px solid rgba(196,154,74,.34);border-radius:8px;padding:12px;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+.rail-num{width:26px;height:26px;display:grid;place-items:center;border-radius:999px;background:rgba(195,59,55,.22);color:#ffd9d7;border:1px solid rgba(195,59,55,.55);font-family:ui-monospace,Consolas,monospace;font-weight:900}
+.rail-step b{display:block;color:#f8efd9;font-size:14px}
+.rail-step small{display:block;color:var(--ll-muted);line-height:1.35;margin-top:2px}
+.source-banner{
+  border:1px solid rgba(103,215,212,.36);background:rgba(103,215,212,.075);border-radius:8px;padding:10px 12px;
+  color:#d9fbfa;margin:0 0 12px;font-size:13px;
+}
+.source-banner a{color:#9ff2ee!important;font-weight:800}
+.source-dot{
+  display:inline-grid;place-items:center;margin-right:8px;border:1px solid rgba(103,215,212,.54);border-radius:4px;
+  padding:2px 5px;color:#081014;background:#8be8e3;font-family:ui-monospace,Consolas,monospace;font-size:11px;font-weight:900;
+}
+#intake_grid{gap:12px!important;margin-bottom:8px}
+#go_row{margin:12px 0 10px!important;gap:10px!important}
+#go_row button{
+  border-radius:8px!important;
+  min-height:48px!important;
+  font-weight:900!important;
+  letter-spacing:0!important;
+  box-shadow:0 10px 28px rgba(195,59,55,.20)!important;
+}
+#go_row button.primary{
+  background:linear-gradient(180deg,#dd4b45,#a92e2b)!important;
+  border:1px solid rgba(255,190,185,.32)!important;
+  color:#fff8ed!important;
+}
+#status_panel{margin:6px 0 14px}
+.status-card{
+  border:1px solid rgba(196,154,74,.34);border-radius:8px;background:rgba(16,20,27,.86);
+  padding:13px 14px;color:#eadfca;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;
+}
+.status-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:999px;border:1px solid rgba(196,154,74,.46);color:var(--ll-brass);font-family:ui-monospace,Consolas,monospace;font-weight:900}
+.status-card b{display:block;color:#fff0d7}
+.status-card span{display:block;color:var(--ll-muted);font-size:13px;line-height:1.4;margin-top:1px}
+.status-card.pending{border-color:rgba(103,215,212,.52);box-shadow:0 0 0 1px rgba(103,215,212,.10),0 0 38px rgba(103,215,212,.08)}
+.spinner{width:18px;height:18px;border-radius:999px;border:3px solid rgba(103,215,212,.22);border-top-color:var(--ll-cyan);animation:llspin .8s linear infinite}
+.scanline{position:relative;height:4px;background:rgba(103,215,212,.12);border-radius:999px;overflow:hidden;margin-top:8px}
+.scanline:after{content:"";position:absolute;inset:0;width:42%;background:linear-gradient(90deg,transparent,var(--ll-cyan),transparent);animation:llscan 1.3s ease-in-out infinite}
+@keyframes llspin{to{transform:rotate(360deg)}}
+@keyframes llscan{0%{transform:translateX(-110%)}100%{transform:translateX(250%)}}
+.results-shell{display:grid;gap:12px}
+.risk-docket{border:1px solid rgba(196,154,74,.36);border-radius:8px;background:linear-gradient(180deg,rgba(21,27,36,.96),rgba(11,15,20,.96));padding:16px;color:#f7edda}
+.docket-top{display:flex;align-items:center;gap:16px;justify-content:space-between}
+.score-seal{
+  --score:0%;width:112px;height:112px;border-radius:999px;display:grid;place-items:center;flex:0 0 auto;
+  background:conic-gradient(var(--ll-red) var(--score),rgba(196,154,74,.16) 0);
+  border:1px solid rgba(196,154,74,.42);box-shadow:inset 0 0 0 9px #10141b;
+}
+.score-seal strong{font-family:Georgia,serif;font-size:34px;line-height:1;color:#fff4df}
+.score-seal small{font-family:ui-monospace,Consolas,monospace;color:var(--ll-muted);font-size:12px}
+.docket-copy{flex:1;min-width:0}
+.docket-copy h2{margin:0 0 5px;font-family:Georgia,serif;color:#fff4df;font-size:28px;letter-spacing:0}
+.docket-copy p{margin:0;color:#cdbfa8;line-height:1.45}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.meta-pill{border:1px solid rgba(196,154,74,.34);border-radius:999px;padding:5px 9px;color:#d9c9ad;background:rgba(196,154,74,.07);font-size:12px;font-family:ui-monospace,Consolas,monospace}
+.finding-card{border:1px solid rgba(196,154,74,.26);border-left:5px solid var(--ll-red);border-radius:8px;background:#111821;padding:14px;color:#f5ecd9}
+.finding-card.med{border-left-color:var(--ll-brass)}
+.finding-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:9px}
+.finding-title{font-weight:900;color:#fff3dd}
+.risk-badge{font-size:11px;font-family:ui-monospace,Consolas,monospace;border-radius:999px;padding:4px 8px;border:1px solid rgba(195,59,55,.55);color:#ffc9c6;background:rgba(195,59,55,.14)}
+.finding-card.med .risk-badge{border-color:rgba(196,154,74,.55);color:#ffe0a2;background:rgba(196,154,74,.13)}
+.quote-box{white-space:pre-wrap;margin:0 0 10px;background:#080b10;border:1px solid rgba(245,236,217,.08);border-radius:6px;padding:10px;color:#efe6d6;font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.45}
+.finding-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mini-note{background:rgba(245,236,217,.045);border:1px solid rgba(245,236,217,.075);border-radius:6px;padding:10px;color:#cdbfa8;line-height:1.42}
+.mini-note b{display:block;color:#f7edda;margin-bottom:3px}
+.mini-note.push{color:#c8f4d7;border-color:rgba(127,220,161,.22);background:rgba(127,220,161,.055)}
+.contract-page{white-space:pre-wrap;max-height:680px;overflow:auto;background:#f7f0df;color:#1a1712;border:1px solid rgba(196,154,74,.45);border-radius:8px;padding:20px;font-family:Georgia,"Times New Roman",serif;line-height:1.56;box-shadow:inset 0 0 0 1px rgba(0,0,0,.04)}
+.contract-page mark{background:linear-gradient(transparent 48%,rgba(103,215,212,.52) 48%);color:#050505;border-bottom:2px solid #00a8a3;padding:0 2px}
+.placeholder-panel{border:1px dashed rgba(196,154,74,.35);border-radius:8px;background:rgba(16,20,27,.56);padding:18px;color:#baad96;min-height:160px}
+.placeholder-panel b{display:block;color:#f3e8d1;margin-bottom:6px}
+.doc-loading{min-height:220px;display:grid;place-items:center;border:1px dashed rgba(103,215,212,.38);border-radius:8px;background:rgba(103,215,212,.05);color:#bdf4f1}
+@media (max-width:760px){
+  .gradio-container{padding:10px 10px 28px!important}
+  #hdr{padding:16px}
+  .lease-topbar{align-items:flex-start;flex-direction:column}
+  .proof-strip{justify-content:flex-start}
+  #hdr h1{font-size:34px}
+  .judge-rail,.finding-grid{grid-template-columns:1fr}
+  .docket-top{align-items:flex-start;flex-direction:column}
+  .score-seal{width:96px;height:96px}
+}
 """
+
+
+def _status_html(kind="ready", title="Ready to analyze", detail="Default SEC-filed lease is loaded. Press Analyze contract when ready."):
+    icon = "LL"
+    extra = ""
+    if kind == "pending":
+        icon = '<span class="spinner"></span>'
+        extra = '<div class="scanline"></div>'
+    elif kind == "done":
+        icon = "OK"
+    elif kind == "error":
+        icon = "!"
+    return (
+        '<div class="status-card ' + _html.escape(kind) + '">'
+        '<div class="status-icon">' + icon + '</div>'
+        '<div><b>' + _html.escape(title) + '</b><span>' + _html.escape(detail) + '</span>' + extra + '</div>'
+        '</div>'
+    )
+
+
+def _placeholder_results_html():
+    return (
+        '<div class="placeholder-panel"><b>Risk docket appears here</b>'
+        'Lease Lens will score the contract, group the risky clauses, and show verbatim evidence after analysis.</div>'
+    )
+
+
+def _doc_placeholder_html():
+    return (
+        '<div class="placeholder-panel"><b>Highlighted contract page</b>'
+        'Flagged clauses will be highlighted in the source text so the evidence is easy to verify.</div>'
+    )
+
+
+def _analysis_pending_outputs():
+    return (
+        _status_html("pending", "Analyzing contract", "Routing clause checks, running the 3B model, and verifying verbatim evidence."),
+        '<div class="risk-docket"><div class="docket-top"><div class="score-seal" style="--score:12%"><strong>...</strong></div>'
+        '<div class="docket-copy"><h2>Building risk docket</h2><p>The model is checking renewal, fees, liability, arbitration, repair burden, and other clauses. This can take a bit on ZeroGPU.</p>'
+        '<div class="scanline"></div></div></div></div>',
+        '<div class="doc-loading"><div><b>Scanning contract text</b><div class="scanline"></div></div></div>',
+        "",
+        gr.update(value="Analyzing...", interactive=False),
+    )
+
+
+def _result_status_html(data):
+    if data.get("status") == "empty":
+        return _status_html("error", "No contract text", data.get("message", "Paste or load a contract first."))
+    if data.get("status") == "error":
+        return _status_html("error", "Analysis failed", data.get("message", "Try again shortly."))
+    detail = (
+        str(data.get("flag_count", 0)) + " flags found across " +
+        str(data.get("checked_count", 0)) + " checked clause groups. " +
+        "Every shown quote is grounded in the contract text."
+    )
+    return _status_html("done", "Analysis complete", detail)
 
 
 def _render_blocks_results(data):
     if data.get("status") == "empty":
-        return '<div style="color:#e3b15f;font-family:Segoe UI,sans-serif">' + data["message"] + '</div>'
+        return _placeholder_results_html()
     if data.get("status") == "error":
-        return '<div style="color:#ff6b6b;font-family:Segoe UI,sans-serif">' + _html.escape(data["message"]) + '</div>'
+        return (
+            '<div class="placeholder-panel"><b>Analysis failed</b>' +
+            _html.escape(data.get("message", "Try again shortly.")) + '</div>'
+        )
+
+    score = max(0, min(100, int(data.get("score", 0))))
+    flag_count = int(data.get("flag_count", 0))
+    checked_count = int(data.get("checked_count", 0))
+    total_count = int(data.get("total_clause_count", len(CLAUSES)))
+    note = data.get("coverage_note") or (
+        "Read " + str(data.get("char_count", 0)) + " characters across " +
+        str(data.get("chunk_count", 0)) + " chunks."
+    )
     cards = [
-        '<div style="background:#11151d;border:1px solid #52442c;border-radius:8px;padding:16px;color:#f4ead7;font-family:Segoe UI,sans-serif;margin-bottom:12px">'
-        '<div style="font-family:Georgia,serif;font-size:38px;color:#b73737">' + str(data["score"]) + '<span style="font-size:16px;color:#9f927d">/100</span></div>'
-        '<b>' + _html.escape(data["verdict"]) + '</b><br>'
-        '<span style="color:#9f927d">' + str(data["flag_count"]) + ' clauses flagged of ' + str(data["checked_count"]) + ' checked</span></div>'
+        '<div class="results-shell"><div class="risk-docket"><div class="docket-top">'
+        '<div class="score-seal" style="--score:' + str(score) + '%"><div><strong>' + str(score) +
+        '</strong><small>/100</small></div></div>'
+        '<div class="docket-copy"><h2>' + _html.escape(data.get("verdict", "Risk review")) + '</h2>'
+        '<p>' + str(flag_count) + ' risky clause' + ('' if flag_count == 1 else 's') +
+        ' flagged from ' + str(checked_count) + ' checked groups. Lease Lens reports evidence, not legal advice.</p>'
+        '<div class="meta-row">'
+        '<span class="meta-pill">High flags: ' + str(data.get("high_count", 0)) + '</span>'
+        '<span class="meta-pill">Checked: ' + str(checked_count) + '/' + str(total_count) + '</span>'
+        '<span class="meta-pill">Grounded quotes only</span>'
+        '</div></div></div><div class="meta-row"><span class="meta-pill">' + _html.escape(note) +
+        '</span></div></div>'
     ]
-    for f in data.get("findings", []):
-        cards.append('<div style="border-left:4px solid #b73737;background:#121821;border-radius:8px;padding:13px;margin-bottom:10px;color:#f4ead7">'
-                     '<b>' + _html.escape(f["label"]) + '</b>'
-                     '<pre style="white-space:pre-wrap;color:#e5dccd;background:#090b0f;padding:10px;border-radius:6px">' + _html.escape(f["text"]) + '</pre>'
-                     '<div style="color:#c9bdab">Why: ' + _html.escape(f["why"]) + '</div>'
-                     '<div style="color:#84d39b">Push back: ' + _html.escape(f["tip"]) + '</div></div>')
+
+    findings = data.get("findings", [])
+    if not findings:
+        cards.append(
+            '<div class="placeholder-panel"><b>No grounded risky clauses found</b>'
+            'The model did not return a quote that passed the verbatim grounding and relevance checks.</div>'
+        )
+    for f in findings:
+        risk = _html.escape(str(f.get("risk", "med")).lower())
+        cards.append(
+            '<div class="finding-card ' + risk + '">'
+            '<div class="finding-head"><div class="finding-title">' + _html.escape(f.get("label", "Clause")) +
+            '</div><span class="risk-badge">' + _html.escape(risk.upper()) + '</span></div>'
+            '<pre class="quote-box">' + _html.escape(f.get("text", "")) + '</pre>'
+            '<div class="finding-grid">'
+            '<div class="mini-note"><b>Why it matters</b>' + _html.escape(f.get("why", "")) + '</div>'
+            '<div class="mini-note push"><b>Push back</b>' + _html.escape(f.get("tip", "")) + '</div>'
+            '</div></div>'
+        )
+    cards.append("</div>")
     return "".join(cards)
 
 
@@ -445,48 +710,120 @@ def launch_blocks_fallback():
     if gr is None:
         raise RuntimeError("Gradio is required unless LEASE_LENS_MOCK=1 is used.")
     with gr.Blocks(css=CSS_FALLBACK, title="Lease Lens") as demo:
-        gr.HTML('<div id="hdr"><h1>Lease Lens</h1>'
-                '<p>Read the lease before it reads you. A fine-tuned 3B legal model scores risk, flags verbatim clauses, highlights evidence, and drafts pushback.</p>'
-                '<span class="chip">3B fine-tune</span><span class="chip">+242% F1 vs base</span>'
-                '<span class="chip">SEC-filed examples</span><span class="chip">GGUF / llama.cpp</span></div>')
-        with gr.Row():
-            ex = gr.Dropdown(choices=list(EXAMPLES.keys()), value=DEFAULT_EXAMPLE, label="Load a real filing or sample")
-            up = gr.File(label="...or upload your own .txt contract", file_types=[".txt"], type="filepath")
+        gr.HTML(
+            '<section id="hdr">'
+            '<div class="lease-topbar"><div class="lease-brand"><span class="lease-seal">LL</span>'
+            '<div><div class="lease-name">Lease Lens</div><div class="lease-sub">redline legal evidence desk</div></div></div>'
+            '<div class="proof-strip">'
+            '<span class="proof-chip">3B fine-tune</span><span class="proof-chip">+242% F1 vs base</span>'
+            '<span class="proof-chip">SEC-filed examples</span><span class="proof-chip">GGUF / llama.cpp</span>'
+            '<span class="proof-chip">ZeroGPU</span><span class="proof-chip">No external LLM API</span>'
+            '</div></div>'
+            '<div class="hero-line"><p class="eyebrow">contract risk review before signature</p>'
+            '<h1>Read the lease before it reads you.</h1>'
+            '<p class="hero-copy">Load a real filing or paste your contract. Lease Lens returns a risk score, grounded clause evidence, highlighted source text, and a plain-English negotiation draft.</p></div>'
+            '<div class="judge-rail">'
+            '<div class="rail-step"><span class="rail-num">1</span><div><b>Load real filing</b><small>The default SEC lease is ready on open.</small></div></div>'
+            '<div class="rail-step"><span class="rail-num">2</span><div><b>Analyze evidence</b><small>Quotes must appear verbatim in the contract.</small></div></div>'
+            '<div class="rail-step"><span class="rail-num">3</span><div><b>Draft pushback</b><small>Turn grounded flags into a review email.</small></div></div>'
+            '</div></section>'
+        )
+        with gr.Row(elem_id="intake_grid"):
+            ex = gr.Dropdown(choices=list(EXAMPLES.keys()), value=DEFAULT_EXAMPLE, label="Real filing or sample")
+            up = gr.File(label="Upload your own .txt contract", file_types=[".txt"], type="filepath")
         src_banner = gr.HTML(value=_source_banner_html(DEFAULT_EXAMPLE))
-        inp = gr.Textbox(value=EXAMPLES[DEFAULT_EXAMPLE], lines=10, max_lines=20, label="Contract text")
+        inp = gr.Textbox(value=EXAMPLES[DEFAULT_EXAMPLE], lines=10, max_lines=20, label="Contract text", elem_id="contract_input")
         with gr.Row(elem_id="go_row"):
             btn = gr.Button("Analyze contract", variant="primary", scale=4)
             clear_btn = gr.Button("Clear", variant="secondary", scale=1)
+        status_panel = gr.HTML(value=_status_html(), elem_id="status_panel")
         st = gr.State("[]")
-        with gr.Row():
-            out_cards = gr.HTML()
-            out_doc = gr.HTML()
+        with gr.Row(elem_id="evidence_grid"):
+            out_cards = gr.HTML(value=_placeholder_results_html())
+            out_doc = gr.HTML(value=_doc_placeholder_html())
         with gr.Accordion("Negotiation Letter", open=False):
             email_btn = gr.Button("Draft pushback")
             email_out = gr.Textbox(lines=12, label="Draft for review", show_copy_button=True)
 
         def load_example(name):
             payload = get_example_payload(name)
-            return payload["text"], payload["source_banner_html"]
+            return (
+                payload["text"],
+                payload["source_banner_html"],
+                _status_html("ready", "Example loaded", "Press Analyze contract to build the risk docket."),
+                _placeholder_results_html(),
+                _doc_placeholder_html(),
+                "[]",
+                "",
+            )
 
         def load_file(path):
             if not path:
-                return "", ""
+                return "", "", _status_html(), _placeholder_results_html(), _doc_placeholder_html(), "[]", ""
             with open(path, "r", errors="ignore") as fh:
-                return fh.read(), ""
+                return (
+                    fh.read(),
+                    "",
+                    _status_html("ready", "Contract uploaded", "Press Analyze contract to check the uploaded text."),
+                    _placeholder_results_html(),
+                    _doc_placeholder_html(),
+                    "[]",
+                    "",
+                )
 
         def analyze_blocks(text):
-            data = analyze_contract_payload(text)
-            return _render_blocks_results(data), data.get("highlighted_html", ""), json.dumps(data.get("findings", []))
+            try:
+                data = analyze_contract_payload(text)
+                doc = data.get("highlighted_html", "") if data.get("status") == "ok" else _doc_placeholder_html()
+            except Exception as e:
+                data = {
+                    "status": "error",
+                    "message": "Analysis failed: " + str(e)[:220],
+                    "findings": [],
+                }
+                doc = _doc_placeholder_html()
+            return (
+                _result_status_html(data),
+                _render_blocks_results(data),
+                doc,
+                json.dumps(data.get("findings", [])),
+                gr.update(value="Analyze contract", interactive=True),
+            )
 
         def draft_blocks(state_json):
             return draft_email_payload(state_json).get("email", "")
 
-        ex.change(load_example, ex, [inp, src_banner])
-        up.upload(load_file, up, [inp, src_banner])
-        btn.click(analyze_blocks, inp, [out_cards, out_doc, st])
+        ex.change(load_example, ex, [inp, src_banner, status_panel, out_cards, out_doc, st, email_out])
+        up.upload(load_file, up, [inp, src_banner, status_panel, out_cards, out_doc, st, email_out])
+        pending = btn.click(
+            _analysis_pending_outputs,
+            None,
+            [status_panel, out_cards, out_doc, email_out, btn],
+            queue=False,
+            show_progress="hidden",
+        )
+        pending.then(
+            analyze_blocks,
+            inp,
+            [status_panel, out_cards, out_doc, st, btn],
+            show_progress="minimal",
+            show_progress_on=status_panel,
+        )
         email_btn.click(draft_blocks, st, email_out)
-        clear_btn.click(lambda: ("", "", "", "", "[]"), None, [inp, src_banner, out_cards, out_doc, st])
+        clear_btn.click(
+            lambda: (
+                "",
+                "",
+                _status_html("ready", "Ready to analyze", "Load a filing, upload a .txt file, or paste contract text."),
+                _placeholder_results_html(),
+                _doc_placeholder_html(),
+                "",
+                "[]",
+                gr.update(value="Analyze contract", interactive=True),
+            ),
+            None,
+            [inp, src_banner, status_panel, out_cards, out_doc, email_out, st, btn],
+        )
 
     demo.queue().launch(ssr_mode=False, show_error=True)
 
