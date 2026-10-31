@@ -86,6 +86,14 @@ Paste any contract → verbatim risky-clause flags, a risk score, in-text highli
 
 The Space now uses a custom **redline legal evidence desk** frontend around the same Gradio/ZeroGPU backend: a real SEC filing loads by default, the judge path is visible on the first screen, and results render as a risk docket with clause evidence and a negotiation letter panel.
 
+## Verification boundary (2026-10-31 audit)
+
+This is a research prototype, not legal advice or a validated legal-risk assessment. Public Space metadata reported **PAUSED** at revision `2ccf3c2`; the Space link is not proof of a currently running service. No restart, hardware change, model download, or hosted inference was performed in this audit.
+
+The benchmark tables, SEC examples, scores, and training records below are historical repository reports, not newly repeated results. Track and achievement tags describe submission categories, not independently verified awards. Offline Python syntax and frontend JavaScript checks do not establish GPU/runtime compatibility or model quality; the ML requirements remain unpinned.
+
+The hosted frontend sends contract text to the Space. “No external LLM API” does not mean the hosted application is offline or establishes a confidentiality/retention guarantee. Use rights-cleared examples. The code's Apache license does not replace the separate base-model, adapter, or dataset terms.
+
 ## Submission Snapshot
 
 | | |
